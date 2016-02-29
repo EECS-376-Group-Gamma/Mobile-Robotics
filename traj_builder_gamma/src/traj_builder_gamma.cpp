@@ -417,8 +417,43 @@ void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
     des_state.header = start_pose.header;
     des_state.pose.pose = start_pose.pose; //set the start pose to where you currently are
 
-    //TO BE CONTINUED...
+    //double des_speed = start_state.twist.twist.linear.x;
+    double des_speed = 1; //TODO: CHANGE THIS TO SOMETHING BETTER!
+    double x_des = x_start;
+    double y_des = y_start;
+    double t = 0.0;
 
+    while(des_speed > 0) {
+        t += dt_;
+        if(des_speed < (accel_max_ * dt_)){
+            ROS_INFO("Meow.");
+            double act_accel = des_speed / dt_;
+            x_des += (0.5 * act_accel * dt_ * dt_ * cos(psi));
+            y_des += (0.5 * act_accel * dt_ * dt_ * sin(psi));
+
+            des_state.pose.pose.position.x = x_des;
+            des_state.pose.pose.position.y = y_des;
+
+            des_speed = 0;
+
+            des_state.twist.twist.linear.x = des_speed;
+            vec_of_states.push_back(des_state);
+        } else {
+            x_des += (0.5 * accel_max_ * dt_ * dt_ * cos(psi));
+            y_des += (0.5 * accel_max_ * dt_ * dt_ * sin(psi));
+
+            des_state.pose.pose.position.x = x_des;
+            des_state.pose.pose.position.y = y_des;
+
+            des_speed -= accel_max_ * dt_;
+
+            des_state.twist.twist.linear.x = des_speed;
+            vec_of_states.push_back(des_state);
+        }
+
+        des_state.twist.twist = halt_twist_;  //ensure that the speed ends up at 0
+        vec_of_states.push_back(des_state);
+    }
 }
 
 //main fnc of this library: constructs a spin-in-place reorientation to
