@@ -33,7 +33,7 @@ cs_add_executable(mobot_pub_des_state_gamma src/pub_des_state_gamma.cpp)
 
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
-# target_link_library(example my_lib)
+target_link_libraries(mobot_pub_des_state_gamma traj_builder_gamma ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()
