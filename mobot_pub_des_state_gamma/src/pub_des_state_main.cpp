@@ -1,4 +1,4 @@
-#include "pub_des_state.h"
+#include <mobot_pub_des_state_gamma/pub_des_state_gamma.h>
 int main(int argc, char **argv) {
     ros::init(argc, argv, "des_state_publisher");
     ros::NodeHandle nh;

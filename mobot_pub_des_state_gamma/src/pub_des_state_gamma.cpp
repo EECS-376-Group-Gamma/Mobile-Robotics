@@ -1,4 +1,4 @@
-#include "pub_des_state.h"
+#include <mobot_pub_des_state_gamma/pub_des_state_gamma.h>
 //ExampleRosClass::ExampleRosClass(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 
 DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {

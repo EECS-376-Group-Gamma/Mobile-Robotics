@@ -1,8 +1,8 @@
-#ifndef PUB_DES_STATE_H_
-#define PUB_DES_STATE_H_
+#ifndef PUB_DES_STATE_GAMMA_H_
+#define PUB_DES_STATE_GAMMA_H_
 
 #include <queue>
-#include <traj_builder/traj_builder.h> //has almost all the headers we need
+#include <traj_builder_gamma/traj_builder_gamma.h> //has almost all the headers we need
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
 #include <std_srvs/Trigger.h>
