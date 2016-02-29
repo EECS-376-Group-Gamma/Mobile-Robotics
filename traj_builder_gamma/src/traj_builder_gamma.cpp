@@ -405,7 +405,19 @@ void TrajBuilder::build_triangular_spin_traj(geometry_msgs::PoseStamped start_po
 //compute trajectory corresponding to applying max prudent decel to halt
 void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
         std::vector<nav_msgs::Odometry> &vec_of_states) {
-    //FINISH ME!
+    
+    ROS_INFO("E-stop received! Building a braking trajectory.");
+    vec_of_states.clear();
+
+    double x_start = start_pose.pose.position.x;
+    double y_start = start_pose.pose.position.y;
+    double psi = convertPlanarQuat2Psi(start_pose.pose.orientation);
+
+    nav_msgs::Odometry des_state;
+    des_state.header = start_pose.header;
+    des_state.pose.pose = start_pose.pose; //set the start pose to where you currently are
+
+    //TO BE CONTINUED...
 
 }
 
