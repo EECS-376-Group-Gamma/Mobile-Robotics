@@ -1,4 +1,4 @@
-#include <mobot_pub_des_state_gamma/pub_des_state_gamma.h>
+#include "pub_des_state.h"
 //ExampleRosClass::ExampleRosClass(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 
 DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
@@ -75,13 +75,15 @@ bool DesStatePublisher::clearEstopServiceCallback(std_srvs::TriggerRequest& requ
 
 bool DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
     ROS_WARN("flushing path queue");
-    while (!path_queue_.empty()) {
+    while (!path_queue_.empty())
+    {
         path_queue_.pop();
     }
     return true;
 }
 
-bool DesStatePublisher::appendPathQueueCB(mobot_pub_des_state_gamma::pathRequest& request, mobot_pub_des_state_gamma::pathResponse& response) {
+bool DesStatePublisher::appendPathQueueCB(mobot_pub_des_state::pathRequest& request, mobot_pub_des_state::pathResponse& response) {
+
     int npts = request.path.poses.size();
     ROS_INFO("appending path queue with %d points", npts);
     for (int i = 0; i < npts; i++) {

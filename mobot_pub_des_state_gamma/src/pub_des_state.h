@@ -1,12 +1,12 @@
-#ifndef PUB_DES_STATE_GAMMA_H_
-#define PUB_DES_STATE_GAMMA_H_
+#ifndef PUB_DES_STATE_H_
+#define PUB_DES_STATE_H_
 
 #include <queue>
-#include <traj_builder_gamma/traj_builder_gamma.h> //has almost all the headers we need
+#include <traj_builder/traj_builder.h> //has almost all the headers we need
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
 #include <std_srvs/Trigger.h>
-#include <mobot_pub_des_state_gamma/path.h>
+#include <mobot_pub_des_state/path.h>
 #include <std_msgs/Float64.h>
 
 //constants and parameters:
@@ -74,7 +74,7 @@ private:
     bool estopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
     bool clearEstopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
     bool flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
-    bool appendPathQueueCB(mobot_pub_des_state_gamma::pathRequest& request,mobot_pub_des_state_gamma::pathResponse& response);
+    bool appendPathQueueCB(mobot_pub_des_state::pathRequest& request,mobot_pub_des_state::pathResponse& response);
 
 public:
     DesStatePublisher(ros::NodeHandle& nh);//constructor
