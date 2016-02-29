@@ -1,5 +1,5 @@
-#ifndef TRAJ_BUILDER_H_
-#define TRAJ_BUILDER_H_
+#ifndef TRAJ_BUILDER_GAMMA_H_
+#define TRAJ_BUILDER_GAMMA_H_
 
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
