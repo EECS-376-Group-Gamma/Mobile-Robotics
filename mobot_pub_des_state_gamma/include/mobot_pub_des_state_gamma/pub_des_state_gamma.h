@@ -22,6 +22,7 @@ const int E_STOPPED = 0; //define some mode keywords
 const int DONE_W_SUBGOAL = 1;
 const int PURSUING_SUBGOAL = 2;
 const int HALTING = 3;
+const int SUPER_E_STOPPED = 4;
 
 class DesStatePublisher {
 private:
