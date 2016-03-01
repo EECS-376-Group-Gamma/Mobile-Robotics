@@ -404,9 +404,68 @@ void TrajBuilder::build_triangular_spin_traj(geometry_msgs::PoseStamped start_po
 //this function would be useful for planning a need for sudden braking
 //compute trajectory corresponding to applying max prudent decel to halt
 void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
-        std::vector<nav_msgs::Odometry> &vec_of_states) {
-    //FINISH ME!
+        std::vector<nav_msgs::Odometry> &vec_of_states, nav_msgs::Odometry current_des_state_) {
+    
+    ROS_INFO("E-stop received! Building a braking trajectory.");
+    vec_of_states.clear();
 
+    double x_start = start_pose.pose.position.x;
+    double y_start = start_pose.pose.position.y;
+    double psi = convertPlanarQuat2Psi(start_pose.pose.orientation);
+
+    nav_msgs::Odometry des_state;
+    des_state.header = start_pose.header;
+    des_state.pose.pose = start_pose.pose; //set the start pose to where you currently are
+
+    double des_speed = current_des_state_.twist.twist.linear.x; // get the current speed of the robot
+    double x_des = x_start;
+    double y_des = y_start;
+    double t = 0.0;
+
+    while(abs(des_speed) > 0) {
+        t += dt_;
+
+        // if robot is going too slow to decrease its speed by the max deceleration
+        if(des_speed < (accel_max_ * dt_)){
+            double actual_accel = des_speed / dt_;
+            x_des += (0.5 * actual_accel * dt_ * dt_ * cos(psi));
+            y_des += (0.5 * actual_accel * dt_ * dt_ * sin(psi));
+
+            des_state.pose.pose.position.x = x_des;
+            des_state.pose.pose.position.y = y_des;
+
+            des_speed = 0; // just set speed to 0
+
+            des_state.twist.twist.linear.x = des_speed;
+            vec_of_states.push_back(des_state);
+        } else {
+            x_des += (0.5 * accel_max_ * dt_ * dt_ * cos(psi));
+            y_des += (0.5 * accel_max_ * dt_ * dt_ * sin(psi));
+
+            des_state.pose.pose.position.x = x_des;
+            des_state.pose.pose.position.y = y_des;
+
+            des_speed -= accel_max_ * dt_;
+
+            des_state.twist.twist.linear.x = des_speed;
+            vec_of_states.push_back(des_state);
+        }
+    }
+    des_state.twist.twist = halt_twist_;  //ensure that the speed ends up at 0
+    vec_of_states.push_back(des_state);
+
+    double psi_accel = alpha_max_ * sgn(current_des_state_.twist.twist.angular.z);
+    double current_angular_speed = current_des_state_.twist.twist.angular.z;
+    while (abs(current_angular_speed) > 0) {
+        t += dt_;
+
+        psi -= current_angular_speed * dt_;
+        current_angular_speed -= psi_accel * dt_;
+
+        des_state.pose.pose.orientation = convertPlanarPsi2Quaternion(psi);
+        des_state.twist.twist.angular.z = current_angular_speed;
+        vec_of_states.push_back(des_state);
+    }
 }
 
 //main fnc of this library: constructs a spin-in-place reorientation to
