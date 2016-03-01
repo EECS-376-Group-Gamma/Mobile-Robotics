@@ -74,29 +74,46 @@ public:
     geometry_msgs::PoseStamped xyPsi2PoseStamped(double x, double y, double psi);
 
     //here are the main traj-builder fncs:
-    void build_trapezoidal_spin_traj(geometry_msgs::PoseStamped start_pose,
-            geometry_msgs::PoseStamped end_pose,
-            std::vector<nav_msgs::Odometry> &vec_of_states);
-    void build_triangular_spin_traj(geometry_msgs::PoseStamped start_pose,
-            geometry_msgs::PoseStamped end_pose,
-            std::vector<nav_msgs::Odometry> &vec_of_states);
-    void build_spin_traj(geometry_msgs::PoseStamped start_pose,
-            geometry_msgs::PoseStamped end_pose,
-            std::vector<nav_msgs::Odometry> &vec_of_states);
-    void build_travel_traj(geometry_msgs::PoseStamped start_pose,
-            geometry_msgs::PoseStamped end_pose,
-            std::vector<nav_msgs::Odometry> &vec_of_states);
-    void build_trapezoidal_travel_traj(geometry_msgs::PoseStamped start_pose,
-            geometry_msgs::PoseStamped end_pose,
-            std::vector<nav_msgs::Odometry> &vec_of_states);
-    void build_triangular_travel_traj(geometry_msgs::PoseStamped start_pose,
-            geometry_msgs::PoseStamped end_pose,
-            std::vector<nav_msgs::Odometry> &vec_of_states);
-    void build_point_and_go_traj(geometry_msgs::PoseStamped start_pose,
-            geometry_msgs::PoseStamped end_pose,
-            std::vector<nav_msgs::Odometry> &vec_of_states);
-    void build_braking_traj(geometry_msgs::PoseStamped start_pose,
-            std::vector<nav_msgs::Odometry> &vec_of_states);
+    void build_trapezoidal_spin_traj(
+        geometry_msgs::PoseStamped start_pose,
+        geometry_msgs::PoseStamped end_pose,
+        std::vector<nav_msgs::Odometry> &vec_of_states
+    );
+    void build_triangular_spin_traj(
+        geometry_msgs::PoseStamped start_pose,
+        geometry_msgs::PoseStamped end_pose,
+        std::vector<nav_msgs::Odometry> &vec_of_states
+    );
+    void build_spin_traj(
+        geometry_msgs::PoseStamped start_pose,
+        geometry_msgs::PoseStamped end_pose,
+        std::vector<nav_msgs::Odometry> &vec_of_states
+    );
+    void build_travel_traj(
+        geometry_msgs::PoseStamped start_pose,
+        geometry_msgs::PoseStamped end_pose,
+        std::vector<nav_msgs::Odometry> &vec_of_states
+    );
+    void build_trapezoidal_travel_traj(
+        geometry_msgs::PoseStamped start_pose,
+        geometry_msgs::PoseStamped end_pose,
+        std::vector<nav_msgs::Odometry> &vec_of_states
+    );
+    void build_triangular_travel_traj(
+        geometry_msgs::PoseStamped start_pose,
+        geometry_msgs::PoseStamped end_pose,
+        std::vector<nav_msgs::Odometry> &vec_of_states
+    );
+    void build_point_and_go_traj(
+        geometry_msgs::PoseStamped start_pose,
+        geometry_msgs::PoseStamped end_pose,
+        std::vector<nav_msgs::Odometry> &vec_of_states
+    );
+    void build_braking_traj(
+        geometry_msgs::PoseStamped start_pose,
+        std::vector<nav_msgs::Odometry> &vec_of_states,
+        nav_msgs::Odometry current_des_state_
+    );
 
 };
 
