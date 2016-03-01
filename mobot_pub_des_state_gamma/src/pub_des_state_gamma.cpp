@@ -1,4 +1,4 @@
-#include <mobot_pub_des_state_gamma/pub_des_state_gamma.h>
+#include "pub_des_state.h"
 //ExampleRosClass::ExampleRosClass(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 
 DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
@@ -30,10 +30,6 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     motion_mode_ = DONE_W_SUBGOAL; //init in state ready to process new goal
     e_stop_trigger_ = false; //these are intended to enable e-stop via a service
     e_stop_reset_ = false; //and reset estop
-
-    lidar_trigger_ = false;
-    lidar_reset_ = false;
-
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(0,0,0);
     start_pose_ = current_pose_;
     end_pose_ = current_pose_;
@@ -46,26 +42,15 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
 
 void DesStatePublisher::initializeServices() {
     ROS_INFO("Initializing Services");
-    estop_service_ = nh_.advertiseService(
-        "estop_service",
-        &DesStatePublisher::estopServiceCallback,
-        this
-    );
-    estop_clear_service_ = nh_.advertiseService(
-        "clear_estop_service",
-        &DesStatePublisher::clearEstopServiceCallback,
-        this
-    );
-    flush_path_queue_ = nh_.advertiseService(
-        "flush_path_queue_service",
-        &DesStatePublisher::flushPathQueueCB,
-        this
-    );
-    append_path_ = nh_.advertiseService(
-        "append_path_queue_service",
-        &DesStatePublisher::appendPathQueueCB,
-        this
-    );
+    estop_service_ = nh_.advertiseService("estop_service",
+            &DesStatePublisher::estopServiceCallback, this);
+    estop_clear_service_ = nh_.advertiseService("clear_estop_service",
+            &DesStatePublisher::clearEstopServiceCallback, this);
+    flush_path_queue_ = nh_.advertiseService("flush_path_queue_service",
+            &DesStatePublisher::flushPathQueueCB, this);
+    append_path_ = nh_.advertiseService("append_path_queue_service",
+            &DesStatePublisher::appendPathQueueCB, this);
+    
 }
 
 //member helper function to set up publishers;
@@ -90,13 +75,15 @@ bool DesStatePublisher::clearEstopServiceCallback(std_srvs::TriggerRequest& requ
 
 bool DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
     ROS_WARN("flushing path queue");
-    while (!path_queue_.empty()) {
+    while (!path_queue_.empty())
+    {
         path_queue_.pop();
     }
     return true;
 }
 
-bool DesStatePublisher::appendPathQueueCB(mobot_pub_des_state_gamma::pathRequest& request, mobot_pub_des_state_gamma::pathResponse& response) {
+bool DesStatePublisher::appendPathQueueCB(mobot_pub_des_state::pathRequest& request, mobot_pub_des_state::pathResponse& response) {
+
     int npts = request.path.poses.size();
     ROS_INFO("appending path queue with %d points", npts);
     for (int i = 0; i < npts; i++) {
@@ -107,18 +94,6 @@ bool DesStatePublisher::appendPathQueueCB(mobot_pub_des_state_gamma::pathRequest
 
 void DesStatePublisher::set_init_pose(double x, double y, double psi) {
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(x, y, psi);
-}
-
-//ADDED: Lidar Callbacks
-bool DesStatePublisher::lidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
-    ROS_WARN("I saw something!!");
-    lidar_trigger_ = true;
-    return true;
-}
-bool DesStatePublisher::clearLidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
-    ROS_INFO("It went away...");
-    lidar_reset_ = true;
-    return true;
 }
 
 //here is a state machine to advance desired-state publications
@@ -143,16 +118,24 @@ void DesStatePublisher::pub_next_state() {
     if (e_stop_trigger_) {
         e_stop_trigger_ = false; //reset trigger
         //compute a halt trajectory
-        trajBuilder_.build_braking_traj(current_pose_, des_state_vec_);
-        motion_mode_ = HALTING;
-        traj_pt_i_ = 0;
-        npts_traj_ = des_state_vec_.size();
+        if (motion_mode_ = E_STOPPED) {
+        	motion_mode_ = SUPER_E_STOPPED;
+        }
+        else {
+	        trajBuilder_.build_braking_traj(current_pose_, des_state_vec_);
+    	    motion_mode_ = HALTING;
+        	traj_pt_i_ = 0;
+        	npts_traj_ = des_state_vec_.size();	
+        }
     }
     //or if an e-stop has been cleared
     if (e_stop_reset_) {
         e_stop_reset_ = false; //reset trigger
         if (motion_mode_ != E_STOPPED) {
             ROS_WARN("e-stop reset while not in e-stop mode");
+        }
+        else if (motion_mode_ = SUPER_E_STOPPED) {
+        	motion_mode_ = E_STOPPED;
         }
         //OK...want to resume motion from e-stopped mode;
         else {
@@ -206,7 +189,9 @@ void DesStatePublisher::pub_next_state() {
             if (traj_pt_i_ >= npts_traj_) {
                 motion_mode_ = DONE_W_SUBGOAL; //if so, indicate we are done
                 seg_end_state_ = des_state_vec_.back(); // last state of traj
-                path_queue_.pop(); // done w/ this subgoal; remove from the queue 
+                if (!path_queue_.empty()) { 
+                    path_queue_.pop(); // done w/ this subgoal; remove from the queue 
+                }
                 ROS_INFO("reached a subgoal: x = %f, y= %f",current_pose_.pose.position.x,
                         current_pose_.pose.position.y);
             }
@@ -231,6 +216,10 @@ void DesStatePublisher::pub_next_state() {
                 desired_state_publisher_.publish(seg_end_state_);
             }
             break;
+
+        case SUPER_E_STOPPED:
+            desired_state_publisher_.publish(halt_state_);
+        	break;
 
         default: //this should not happen
             ROS_WARN("motion mode not recognized!");
