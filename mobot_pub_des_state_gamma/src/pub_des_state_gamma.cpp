@@ -31,9 +31,6 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     e_stop_trigger_ = false; //these are intended to enable e-stop via a service
     e_stop_reset_ = false; //and reset estop
 
-    lidar_trigger_ = false;
-    lidar_reset_ = false;
-
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(0,0,0);
     start_pose_ = current_pose_;
     end_pose_ = current_pose_;
@@ -53,6 +50,16 @@ void DesStatePublisher::initializeServices() {
     );
     estop_clear_service_ = nh_.advertiseService(
         "clear_estop_service",
+        &DesStatePublisher::clearEstopServiceCallback,
+        this
+    );
+    estop_service_ = nh_.advertiseService(
+        "lidar_service",
+        &DesStatePublisher::estopServiceCallback,
+        this
+    );
+    estop_clear_service_ = nh_.advertiseService(
+        "clear_lidar_service",
         &DesStatePublisher::clearEstopServiceCallback,
         this
     );
@@ -112,12 +119,12 @@ void DesStatePublisher::set_init_pose(double x, double y, double psi) {
 //ADDED: Lidar Callbacks
 bool DesStatePublisher::lidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
     ROS_WARN("I saw something!!");
-    lidar_trigger_ = true;
+    e_stop_trigger_ = true;
     return true;
 }
 bool DesStatePublisher::clearLidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
     ROS_INFO("It went away...");
-    lidar_reset_ = true;
+    e_stop_reset_ = true;
     return true;
 }
 
