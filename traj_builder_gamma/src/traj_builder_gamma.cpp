@@ -422,14 +422,14 @@ void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
     double y_des = y_start;
     double t = 0.0;
 
-    while(des_speed > 0) {
+    while(abs(des_speed) > 0) {
         t += dt_;
 
         // if robot is going too slow to decrease its speed by the max deceleration
         if(des_speed < (accel_max_ * dt_)){
-            double actal_accel = des_speed / dt_;
-            x_des += (0.5 * actal_accel * dt_ * dt_ * cos(psi));
-            y_des += (0.5 * actal_accel * dt_ * dt_ * sin(psi));
+            double actual_accel = des_speed / dt_;
+            x_des += (0.5 * actual_accel * dt_ * dt_ * cos(psi));
+            y_des += (0.5 * actual_accel * dt_ * dt_ * sin(psi));
 
             des_state.pose.pose.position.x = x_des;
             des_state.pose.pose.position.y = y_des;
@@ -450,8 +450,20 @@ void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
             des_state.twist.twist.linear.x = des_speed;
             vec_of_states.push_back(des_state);
         }
+    }
+    des_state.twist.twist = halt_twist_;  //ensure that the speed ends up at 0
+    vec_of_states.push_back(des_state);
 
-        des_state.twist.twist = halt_twist_;  //ensure that the speed ends up at 0
+    double psi_accel = alpha_max_ * sgn(current_des_state_.twist.twist.angular.z);
+    double current_angular_speed = current_des_state_.twist.twist.angular.z;
+    while (abs(current_angular_speed) > 0) {
+        t += dt_;
+
+        psi -= current_angular_speed * dt_;
+        current_angular_speed -= psi_accel * dt_;
+
+        des_state.pose.pose.orientation = convertPlanarPsi2Quaternion(psi);
+        des_state.twist.twist.angular.z = current_angular_speed;
         vec_of_states.push_back(des_state);
     }
 }
