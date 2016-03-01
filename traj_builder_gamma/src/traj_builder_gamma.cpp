@@ -404,7 +404,7 @@ void TrajBuilder::build_triangular_spin_traj(geometry_msgs::PoseStamped start_po
 //this function would be useful for planning a need for sudden braking
 //compute trajectory corresponding to applying max prudent decel to halt
 void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
-        std::vector<nav_msgs::Odometry> &vec_of_states) {
+        std::vector<nav_msgs::Odometry> &vec_of_states, nav_msgs::Odometry current_des_state_) {
     
     ROS_INFO("E-stop received! Building a braking trajectory.");
     vec_of_states.clear();
@@ -417,24 +417,24 @@ void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
     des_state.header = start_pose.header;
     des_state.pose.pose = start_pose.pose; //set the start pose to where you currently are
 
-    //double des_speed = start_state.twist.twist.linear.x;
-    double des_speed = 1; //TODO: CHANGE THIS TO SOMETHING BETTER!
+    double des_speed = current_des_state_.twist.twist.linear.x; // get the current speed of the robot
     double x_des = x_start;
     double y_des = y_start;
     double t = 0.0;
 
     while(des_speed > 0) {
         t += dt_;
+
+        // if robot is going too slow to decrease its speed by the max deceleration
         if(des_speed < (accel_max_ * dt_)){
-            ROS_INFO("Meow.");
-            double act_accel = des_speed / dt_;
-            x_des += (0.5 * act_accel * dt_ * dt_ * cos(psi));
-            y_des += (0.5 * act_accel * dt_ * dt_ * sin(psi));
+            double actal_accel = des_speed / dt_;
+            x_des += (0.5 * actal_accel * dt_ * dt_ * cos(psi));
+            y_des += (0.5 * actal_accel * dt_ * dt_ * sin(psi));
 
             des_state.pose.pose.position.x = x_des;
             des_state.pose.pose.position.y = y_des;
 
-            des_speed = 0;
+            des_speed = 0; // just set speed to 0
 
             des_state.twist.twist.linear.x = des_speed;
             vec_of_states.push_back(des_state);

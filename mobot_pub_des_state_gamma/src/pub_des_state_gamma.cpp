@@ -116,7 +116,7 @@ void DesStatePublisher::pub_next_state() {
     if (e_stop_trigger_) {
         e_stop_trigger_ = false; //reset trigger
         //compute a halt trajectory
-        trajBuilder_.build_braking_traj(current_pose_, des_state_vec_);
+        trajBuilder_.build_braking_traj(current_pose_, des_state_vec_, current_des_state_);
         motion_mode_ = HALTING;
         traj_pt_i_ = 0;
         npts_traj_ = des_state_vec_.size();
