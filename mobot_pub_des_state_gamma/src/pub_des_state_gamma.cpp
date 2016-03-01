@@ -33,7 +33,7 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
 
     lidar_trigger_ = false;
     lidar_reset_ = false;
-    
+
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(0,0,0);
     start_pose_ = current_pose_;
     end_pose_ = current_pose_;
@@ -107,6 +107,18 @@ bool DesStatePublisher::appendPathQueueCB(mobot_pub_des_state_gamma::pathRequest
 
 void DesStatePublisher::set_init_pose(double x, double y, double psi) {
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(x, y, psi);
+}
+
+//ADDED: Lidar Callbacks
+bool DesStatePublisher::lidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
+    ROS_WARN("I saw something!!");
+    lidar_trigger_ = true;
+    return true;
+}
+bool DesStatePublisher::clearLidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
+    ROS_INFO("estop reset");
+    lidar_reset_ = true;
+    return true;
 }
 
 //here is a state machine to advance desired-state publications

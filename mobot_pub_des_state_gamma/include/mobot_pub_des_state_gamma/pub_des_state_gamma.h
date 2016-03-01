@@ -80,7 +80,8 @@ private:
     bool flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
     bool appendPathQueueCB(mobot_pub_des_state_gamma::pathRequest& request,mobot_pub_des_state_gamma::pathResponse& response);
 
-    void lidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
+    bool lidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
+    bool clearLidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
 
 public:
     DesStatePublisher(ros::NodeHandle& nh);//constructor
@@ -95,6 +96,6 @@ public:
         { path_queue_.push(trajBuilder_.xyPsi2PoseStamped(x,y,psi)); }
 
     bool get_lidar_trigger(){return lidar_trigger_;}
-    void set_lidar_trigger(){lidar_trigger_ - false;}
+    void reset_lidar_trigger(){lidar_trigger_ = false;}
 };
 #endif
