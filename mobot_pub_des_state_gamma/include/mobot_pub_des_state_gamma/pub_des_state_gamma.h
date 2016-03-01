@@ -76,6 +76,8 @@ private:
     bool flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
     bool appendPathQueueCB(mobot_pub_des_state_gamma::pathRequest& request,mobot_pub_des_state_gamma::pathResponse& response);
 
+    void lidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
+
 public:
     DesStatePublisher(ros::NodeHandle& nh);//constructor
     int get_motion_mode() {return motion_mode_;}

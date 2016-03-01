@@ -42,18 +42,33 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
 
 void DesStatePublisher::initializeServices() {
     ROS_INFO("Initializing Services");
-    estop_service_ = nh_.advertiseService("estop_service",
-            &DesStatePublisher::estopServiceCallback, this);
-    estop_clear_service_ = nh_.advertiseService("clear_estop_service",
-            &DesStatePublisher::clearEstopServiceCallback, this);
-    flush_path_queue_ = nh_.advertiseService("flush_path_queue_service",
-            &DesStatePublisher::flushPathQueueCB, this);
-    append_path_ = nh_.advertiseService("append_path_queue_service",
-            &DesStatePublisher::appendPathQueueCB, this);
-    
+    estop_service_ = nh_.advertiseService(
+        "estop_service",
+        &DesStatePublisher::estopServiceCallback,
+        this
+    );
+    estop_clear_service_ = nh_.advertiseService(
+        "clear_estop_service",
+        &DesStatePublisher::clearEstopServiceCallback,
+        this
+    );
+    flush_path_queue_ = nh_.advertiseService(
+        "flush_path_queue_service",
+        &DesStatePublisher::flushPathQueueCB,
+        this
+    );
+    append_path_ = nh_.advertiseService(
+        "append_path_queue_service",
+        &DesStatePublisher::appendPathQueueCB,
+        this
+    );
 }
 
 //member helper function to set up publishers;
+
+void DesStatePublisher::lidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response){
+    //if
+}
 
 void DesStatePublisher::initializePublishers() {
     ROS_INFO("Initializing Publishers");
