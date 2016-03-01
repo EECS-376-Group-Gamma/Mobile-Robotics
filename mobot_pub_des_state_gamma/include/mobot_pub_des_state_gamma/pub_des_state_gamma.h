@@ -56,6 +56,10 @@ private:
     double omega_max_; 
     double path_move_tol_; 
 
+    //ADDED: A trigger set for LIDAR
+    bool lidar_trigger_;
+    bool lidar_reset_;
+
     // some objects to support service and publisher
     ros::ServiceServer estop_service_;
     ros::ServiceServer estop_clear_service_;
@@ -89,5 +93,8 @@ public:
     void append_path_queue(geometry_msgs::PoseStamped pose) { path_queue_.push(pose); }
     void append_path_queue(double x, double y, double psi) 
         { path_queue_.push(trajBuilder_.xyPsi2PoseStamped(x,y,psi)); }
+
+    bool get_lidar_trigger(){return lidar_trigger_;}
+    void set_lidar_trigger(){lidar_trigger_ - false;}
 };
 #endif

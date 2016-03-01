@@ -30,6 +30,10 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     motion_mode_ = DONE_W_SUBGOAL; //init in state ready to process new goal
     e_stop_trigger_ = false; //these are intended to enable e-stop via a service
     e_stop_reset_ = false; //and reset estop
+
+    lidar_trigger_ = false;
+    lidar_reset_ = false;
+    
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(0,0,0);
     start_pose_ = current_pose_;
     end_pose_ = current_pose_;
@@ -65,10 +69,6 @@ void DesStatePublisher::initializeServices() {
 }
 
 //member helper function to set up publishers;
-
-void DesStatePublisher::lidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response){
-    //if
-}
 
 void DesStatePublisher::initializePublishers() {
     ROS_INFO("Initializing Publishers");
