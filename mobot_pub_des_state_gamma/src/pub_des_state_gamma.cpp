@@ -116,7 +116,7 @@ bool DesStatePublisher::lidarServiceCallback(std_srvs::TriggerRequest& request, 
     return true;
 }
 bool DesStatePublisher::clearLidarServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response) {
-    ROS_INFO("estop reset");
+    ROS_INFO("It went away...");
     lidar_reset_ = true;
     return true;
 }
