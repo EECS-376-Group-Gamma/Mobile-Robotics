@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 	ind_min_ = 0;
 	ind_max_ = 0;
 
-	ros::Subscriber lidar_subscriber = nh.subscribe("/scan", 1, laserCallback);
+	ros::Subscriber lidar_subscriber = nh.subscribe("/base_laser1_scan", 1, laserCallback);
 
 	client_set_ = nh.serviceClient<std_srvs::Trigger>("lidar_service");
 	client_rst_ = nh.serviceClient<std_srvs::Trigger>("clear_lidar_service");

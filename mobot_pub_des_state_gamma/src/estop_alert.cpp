@@ -13,7 +13,7 @@ bool stopped_;
 
 void estopCallback(const std_msgs::Bool& estoppery){
 
-	bool stopped = estoppery.data;
+	bool stopped = !(estoppery.data);
 
     if(stopped && !stopped_){
     	stopped_ = true;
