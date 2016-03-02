@@ -25,12 +25,15 @@ catkin_simple()
 # SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Libraries: uncomment the following and edit arguments to create a new library
-cs_add_library(pub_des_state_gamma src/pub_des_state_gamma.cpp)   
+cs_add_library(pub_des_state_gamma src/pub_des_state_gamma.cpp)
 
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package
 cs_add_executable(pub_des_state_main_gamma src/pub_des_state_main.cpp)
 cs_add_executable(lidar_alert src/lidar_alert.cpp)
+cs_add_executable(open_loop_controller_gamma src/open_loop_controller_gamma.cpp)
+cs_add_executable(pub_des_state_path_client_gamma src/pub_des_state_path_client_gamma.cpp)
+# cs_add_executable(pub_des_state_gamma src/pub_des_state_gamma.cpp)
 
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package

@@ -454,16 +454,23 @@ void TrajBuilder::build_braking_traj(geometry_msgs::PoseStamped start_pose,
     des_state.twist.twist = halt_twist_;  //ensure that the speed ends up at 0
     vec_of_states.push_back(des_state);
 
-    double psi_accel = alpha_max_ * sgn(current_des_state_.twist.twist.angular.z);
+    //double psi_accel = alpha_max_ * sgn(current_des_state_.twist.twist.angular.z);
     double current_angular_speed = current_des_state_.twist.twist.angular.z;
+
     while (abs(current_angular_speed) > 0) {
         t += dt_;
 
-        psi -= current_angular_speed * dt_;
-        current_angular_speed -= psi_accel * dt_;
+        //psi -= current_angular_speed * dt_;
+        //current_angular_speed -= psi_accel * dt_;
 
+        //des_state.pose.pose.orientation = convertPlanarPsi2Quaternion(psi);
+        //des_state.twist.twist.angular.z = current_angular_speed;
+        //vec_of_states.push_back(des_state);
+
+        current_angular_speed -= alpha_max_ * dt_;
+        des_state.twist.twist.linear.z = current_angular_speed;
+        psi += current_angular_speed * dt_;
         des_state.pose.pose.orientation = convertPlanarPsi2Quaternion(psi);
-        des_state.twist.twist.angular.z = current_angular_speed;
         vec_of_states.push_back(des_state);
     }
 }
