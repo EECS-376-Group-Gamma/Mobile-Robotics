@@ -31,6 +31,7 @@ cs_add_library(pub_des_state_gamma src/pub_des_state_gamma.cpp)
 # may add more of these lines for more nodes from the same package
 cs_add_executable(pub_des_state_main_gamma src/pub_des_state_main.cpp)
 cs_add_executable(lidar_alert src/lidar_alert.cpp)
+cs_add_executable(estop_alert src/estop_alert.cpp)
 cs_add_executable(open_loop_controller_gamma src/open_loop_controller_gamma.cpp)
 cs_add_executable(pub_des_state_path_client_gamma src/pub_des_state_path_client_gamma.cpp)
 # cs_add_executable(pub_des_state_gamma src/pub_des_state_gamma.cpp)
