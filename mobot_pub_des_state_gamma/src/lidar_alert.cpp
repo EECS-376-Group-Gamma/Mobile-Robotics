@@ -40,13 +40,14 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan){
         double halfway = angle_min_ + angle_max_ / 2.0;
         double ang_upper_bound = halfway - ONE_SIDE_FANOUT;
         double ang_lower_bound = halfway + ONE_SIDE_FANOUT;
-        int ind_min_ = (int) ((ang_upper_bound - angle_min_)/angle_inc_);
-        int ind_max_ = (int) ((ang_lower_bound - angle_min_)/angle_inc_);
+        ind_min_ = (int) ((ang_upper_bound - angle_min_)/angle_inc_);
+        ind_max_ = (int) ((ang_lower_bound - angle_min_)/angle_inc_);
         ROS_INFO("LIDAR setup: ping_index = %d, bound indices (%d, %d)",pindex_, ind_min_, ind_max_);
     }
 
     bool obstruction = false;
     for(int i = ind_min_; i <= ind_max_; i++){
+        //ROS_INFO("  %d: %f",i, laser_scan.ranges[i]);
     	if(laser_scan.ranges[i] < LIDAR_SAFE_DIST){
     		obstruction = true;
     		ROS_WARN("I AM SO TRIGGERED RIGHT NOW...");
