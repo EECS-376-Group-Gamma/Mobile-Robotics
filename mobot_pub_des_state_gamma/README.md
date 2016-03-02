@@ -13,13 +13,24 @@ It will resume motion if/when new subgoals are added to the queue.
 
 ## Example usage
 `roslaunch gazebo_ros empty_world.launch`
+
 `roslaunch mobot_urdf mobot.launch`
+
 `rosrun mobot_pub_des_state_gamma open_loop_controller_gamma`
+
 `rosrun mobot_pub_des_state_gamma lidar_alert`
+
+`rosrun mobot_pub_des_state_gamma estop_alert`
+
 `rosrun mobot_pub_des_state_gamma mobot_pub_des_state_main_gamma`
+
 `rosrun mobot_pub_des_state_gamma pub_des_state_path_client_gamma`
 
+
 Perform e-stop and e-stop reset with:
+
 `rosservice call estop_service`
+
 `rosservice call flush_path_queue_service`
+
 `rosservice call clear_estop_service`
