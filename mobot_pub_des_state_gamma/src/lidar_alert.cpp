@@ -26,7 +26,6 @@ std_srvs::Trigger srv_rst_;
 
 
 void laserCallback(const sensor_msgs::LaserScan& laser_scan){
-    ROS_INFO("CB: %i - %i", ind_min_, ind_max_);
 	if (pindex_<0){
         //for first message received, set up the desired index of LIDAR range to eval
         angle_min_ = laser_scan.angle_min;
@@ -45,8 +44,6 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan){
         ind_max_ = (int) ((ang_lower_bound - angle_min_)/angle_inc_);
         ROS_INFO("LIDAR setup: ping_index = %d, bound indices (%d, %d)",pindex_, ind_min_, ind_max_);
     }
-
-    ROS_INFO("CB: %i - %i", ind_min_, ind_max_);
 
     bool obstruction = false;
     for(int i = ind_min_; i <= ind_max_; i++){
