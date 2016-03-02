@@ -55,12 +55,12 @@ void DesStatePublisher::initializeServices() {
     );
     lidar_service_ = nh_.advertiseService(
         "lidar_service",
-        &DesStatePublisher::estopServiceCallback,
+        &DesStatePublisher::lidarServiceCallback,
         this
     );
     lidar_clear_service_ = nh_.advertiseService(
         "clear_lidar_service",
-        &DesStatePublisher::clearEstopServiceCallback,
+        &DesStatePublisher::clearLidarServiceCallback,
         this
     );
     flush_path_queue_ = nh_.advertiseService(
@@ -150,27 +150,34 @@ void DesStatePublisher::pub_next_state() {
     if (e_stop_trigger_) {
         e_stop_trigger_ = false; //reset trigger
         //compute a halt trajectory
-        if (motion_mode_ = E_STOPPED) {
+      	ROS_INFO("1");
+        if (motion_mode_ == E_STOPPED) {
             motion_mode_ = SUPER_E_STOPPED;
+            ROS_INFO("2");
         }
         else {
             trajBuilder_.build_braking_traj(current_pose_, des_state_vec_, current_des_state_);
             motion_mode_ = HALTING;
             traj_pt_i_ = 0;
-            npts_traj_ = des_state_vec_.size();   
+            npts_traj_ = des_state_vec_.size();  
+            ROS_INFO("3"); 
         }
     }
     //or if an e-stop has been cleared
     if (e_stop_reset_) {
+    	ROS_INFO("4");
         e_stop_reset_ = false; //reset trigger
         if (motion_mode_ != E_STOPPED) {
             ROS_WARN("e-stop reset while not in e-stop mode");
+            ROS_INFO("5");
         }
-        else if (motion_mode_ = SUPER_E_STOPPED) {
+        else if (motion_mode_ == SUPER_E_STOPPED) {
+        	ROS_INFO("6");
             motion_mode_ = E_STOPPED;
         }
         //OK...want to resume motion from e-stopped mode;
         else {
+        	ROS_INFO("7");
             motion_mode_ = DONE_W_SUBGOAL; //this will pick up where left off
         }
     }
