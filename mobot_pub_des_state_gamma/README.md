@@ -14,7 +14,7 @@ It will resume motion if/when new subgoals are added to the queue.
 ## Example usage
 `roslaunch gazebo_ros empty_world.launch`
 
-`roslaunch mobot_urdf mobot.launch`
+`roslaunch mobot_urdf mobot_w_lidar.launch`
 
 `rosrun mobot_pub_des_state_gamma open_loop_controller_gamma`
 
@@ -22,7 +22,7 @@ It will resume motion if/when new subgoals are added to the queue.
 
 `rosrun mobot_pub_des_state_gamma estop_alert`
 
-`rosrun mobot_pub_des_state_gamma mobot_pub_des_state_main_gamma`
+`rosrun mobot_pub_des_state_gamma pub_des_state_main_gamma`
 
 `rosrun mobot_pub_des_state_gamma pub_des_state_path_client_gamma`
 
