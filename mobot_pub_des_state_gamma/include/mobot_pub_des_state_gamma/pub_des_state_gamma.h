@@ -62,6 +62,9 @@ private:
     ros::ServiceServer estop_clear_service_;
     ros::ServiceServer flush_path_queue_;
     ros::ServiceServer append_path_;
+
+    ros::ServiceServer lidar_service_;
+    ros::ServiceServer lidar_clear_service_;
     
     ros::Publisher desired_state_publisher_;
     ros::Publisher des_psi_publisher_;

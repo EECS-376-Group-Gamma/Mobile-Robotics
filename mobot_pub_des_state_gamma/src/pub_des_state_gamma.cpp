@@ -53,12 +53,12 @@ void DesStatePublisher::initializeServices() {
         &DesStatePublisher::clearEstopServiceCallback,
         this
     );
-    estop_service_ = nh_.advertiseService(
+    lidar_service_ = nh_.advertiseService(
         "lidar_service",
         &DesStatePublisher::estopServiceCallback,
         this
     );
-    estop_clear_service_ = nh_.advertiseService(
+    lidar_clear_service_ = nh_.advertiseService(
         "clear_lidar_service",
         &DesStatePublisher::clearEstopServiceCallback,
         this
