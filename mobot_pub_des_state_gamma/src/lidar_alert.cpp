@@ -4,7 +4,7 @@
 #include <std_msgs/Bool.h> // boolean message 
 #include <std_srvs/Trigger.h>
 
-const double LIDAR_SAFE_DIST = 2.0;
+const double LIDAR_SAFE_DIST = 1.5;
 const double ONE_SIDE_FANOUT = 0.523598776;//in radians
 
 bool obstruction_;
@@ -46,7 +46,7 @@ void laserCallback(const sensor_msgs::LaserScan& laser_scan){
     }
 
     bool obstruction = false;
-    for(int i = ind_min_; i <= ind_max_; i++){
+    for(int i = 45; i <= 120; i++){
         //ROS_INFO("  %d: %f",i, laser_scan.ranges[i]);
     	if(laser_scan.ranges[i] < LIDAR_SAFE_DIST){
     		obstruction = true;
