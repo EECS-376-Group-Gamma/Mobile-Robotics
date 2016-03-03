@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);
  
-    pose.position.y = -13.0;  //5.0
+    pose.position.y = -12.7;  //5.0
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);
 

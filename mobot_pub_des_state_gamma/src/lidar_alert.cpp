@@ -4,7 +4,7 @@
 #include <std_msgs/Bool.h> // boolean message 
 #include <std_srvs/Trigger.h>
 
-const double LIDAR_SAFE_DIST = 2.0;
+const double LIDAR_SAFE_DIST = 1.0;
 const double ONE_SIDE_FANOUT = 0.523598776;//in radians
 
 bool obstruction_;
