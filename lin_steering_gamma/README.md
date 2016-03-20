@@ -13,6 +13,14 @@ and linear-steering algorithm.
 
 `roslaunch mobot_urdf mobot_w_lidar.launch`
 
+Drag in starting pen
+
+`roslaunch lin_steering_gamma lin_steering_gamma.launch`
+
+
+
+
+
 `rosrun mobot_pub_des_state_gamma lidar_alert`
 
 `rosrun mobot_pub_des_state_gamma estop_alert`

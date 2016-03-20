@@ -1,0 +1,7 @@
+<launch>
+	<node name= "lidar_alert" pkg= "mobot_pub_des_state_gamma" type= "lidar_alert"/>
+	<node name= "estop_alert" pkg= "mobot_pub_des_state_gamma" type= "estop_alert"/>
+	<node name= "pub_des_state_main_gamma" pkg= "mobot_pub_des_state_gamma" type= "pub_des_state_main_gamma"/>
+	<node name= "pub_des_state_path_client_gamma" pkg= "mobot_pub_des_state_gamma" type= "pub_des_state_path_client_gamma"/>
+	<node name= "lin_steering_wrt_odom_gamma" pkg= "lin_steering_gamma" type= "lin_steering_wrt_odom_gamma"/>
+</launch>
