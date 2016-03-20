@@ -7,11 +7,9 @@
 
 
 // this header incorporates all the necessary #include files and defines the class "SteeringController"
-//#include "steering_algorithm.h"
 #include <lin_steering_gamma/steering_algorithm_gamma.h>
 
-SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehandle)
-{ // constructor
+SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehandle) { // constructor
     ROS_INFO("in class constructor of SteeringController");
     initializeSubscribers(); // package up the messy work of creating subscribers; do this overhead in constructor
     initializePublishers();
@@ -21,7 +19,7 @@ SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehan
     ROS_INFO("waiting for valid odom message...");
     while (odom_phi_ > 500.0) {
         ros::Duration(0.5).sleep(); // sleep for half a second
-        std::cout << ".";
+        ROS_INFO(".");
         ros::spinOnce();
     }
     ROS_INFO("constructor: got an odom message");    
@@ -93,8 +91,7 @@ void SteeringController::initializeServices()
 */
 
 //member helper function to set up publishers;
-void SteeringController::initializePublishers()
-{
+void SteeringController::initializePublishers() {
     ROS_INFO("Initializing Publishers: cmd_vel and cmd_vel_stamped");
     cmd_publisher_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1, true); // talks to the robot!
     cmd_publisher2_ = nh_.advertise<geometry_msgs::TwistStamped>("cmd_vel_stamped",1, true); //alt topic, includes time stamp
@@ -238,8 +235,7 @@ void SteeringController::lin_steering_algorithm() {
     cmd_publisher2_.publish(twist_cmd2_);     
 }
 
-int main(int argc, char** argv) 
-{
+int main(int argc, char** argv) {
     // ROS set-ups:
     ros::init(argc, argv, "steeringController"); //node name
 
