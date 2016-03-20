@@ -50,11 +50,11 @@ SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehan
     //initialize desired state, in case this is not yet being published adequately
     des_state_ = current_odom_;  // use the current odom state
     // but make sure the speed/spin commands are set to zero
-    current_speed_des_ = 0.0;  // 
-    current_omega_des_ = 0.0;    
+    current_speed_des_ = 0.0;
+    current_omega_des_ = 0.0;
     des_state_.twist.twist.linear.x = current_speed_des_; // but specified desired twist = 0.0
     des_state_.twist.twist.angular.z = current_omega_des_;
-    des_state_.header.stamp = ros::Time::now();   
+    des_state_.header.stamp = ros::Time::now();
 
     //initialize the twist command components, all to zero
     twist_cmd_.linear.x = 0.0;
@@ -65,7 +65,7 @@ SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehan
     twist_cmd_.angular.z = 0.0;
 
     twist_cmd2_.twist = twist_cmd_; // copy the twist command into twist2 message
-    twist_cmd2_.header.stamp = ros::Time::now(); // look up the time and put it in the header  
+    twist_cmd2_.header.stamp = ros::Time::now(); // look up the time and put it in the header
 
 }
 
@@ -220,11 +220,11 @@ void SteeringController::lin_steering_algorithm() {
     
      // do something clever with this information     
     
-    controller_speed = des_state_vel_ + K_TRIP_DIST*trip_dist_err; //you call that clever ?!?!?!? should speed up/slow down to null out 
+    controller_speed = des_state_vel_ + K_TRIP_DIST * trip_dist_err; //you call that clever ?!?!?!? should speed up/slow down to null out 
     //controller_omega = des_state_omega_; //ditto
-    controller_omega = des_state_omega_ + K_PHI*heading_err + K_DISP*lateral_err;
+    controller_omega = des_state_omega_ + K_PHI * heading_err + K_DISP * lateral_err;
     
-    controller_omega = MAX_OMEGA*sat(controller_omega/MAX_OMEGA); // saturate omega command at specified limits
+    controller_omega = MAX_OMEGA * sat(controller_omega/MAX_OMEGA); // saturate omega command at specified limits
     
     // send out our very clever speed/spin commands:
     twist_cmd_.linear.x = controller_speed;
