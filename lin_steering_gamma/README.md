@@ -8,11 +8,20 @@ Can compare feedback controller to open-loop controller.
 ## Example usage
 Start up gazebo, load the mobot model, desired-state publisher, desired-state client,
 and linear-steering algorithm.
+
 `roslaunch gazebo_ros empty_world.launch`
-`roslaunch mobot_urdf mobot.launch`
-`rosrun mobot_pub_des_state mobot_pub_des_state`
-`rosrun mobot_pub_des_state pub_des_state_path_client`
-`rosrun lin_steering lin_steering_wrt_odom`
+
+`roslaunch mobot_urdf mobot_w_lidar.launch`
+
+`rosrun mobot_pub_des_state_gamma lidar_alert`
+
+`rosrun mobot_pub_des_state_gamma estop_alert`
+
+`rosrun mobot_pub_des_state_gamma pub_des_state_main_gamma`
+
+`rosrun mobot_pub_des_state_gamma pub_des_state_path_client_gamma`
+
+`rosrun lin_steering_gamma lin_steering_wrt_odom_gamma`
 
 
     
