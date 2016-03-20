@@ -1,4 +1,4 @@
-# lin_steering
+# lin_steering_gamma
 Steering algorithm using odometry.  For mobot, "odom" is perfect.  Neede to relax this
 assumption.
 

@@ -2,8 +2,8 @@
 // wsn; Feb, 2016
 // include this file in "lin_steering_wrt_odom.cpp"
 
-#ifndef STEERING_ALGORITHM_H_
-#define STEERING_ALGORITHM_H_
+#ifndef STEERING_ALGORITHM_GAMMA_H_
+#define STEERING_ALGORITHM_GAMMA_H_
 
 //some generically useful stuff to include...
 #include <math.h>

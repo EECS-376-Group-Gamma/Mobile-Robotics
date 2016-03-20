@@ -7,8 +7,8 @@
 
 
 // this header incorporates all the necessary #include files and defines the class "SteeringController"
-#include "steering_algorithm.h"
-
+//#include "steering_algorithm.h"
+#include <lin_steering_gamma/steering_algorithm_gamma.h>
 
 SteeringController::SteeringController(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 { // constructor
