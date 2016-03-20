@@ -53,8 +53,8 @@ int main(int argc, char **argv) {
     path_srv.request.path.poses.push_back(pose_stamped);
     
     //repeat (x,y) with new heading:
-    pose_stamped.pose.orientation = convertPlanarPhi2Quaternion(0); 
-    path_srv.request.path.poses.push_back(pose_stamped);
+    //pose_stamped.pose.orientation = convertPlanarPhi2Quaternion(0); 
+    //path_srv.request.path.poses.push_back(pose_stamped);
     
     client.call(path_srv);
 
