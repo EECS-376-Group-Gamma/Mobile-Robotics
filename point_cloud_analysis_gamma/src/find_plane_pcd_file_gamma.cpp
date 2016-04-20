@@ -72,30 +72,34 @@ int main(int argc, char** argv) {
     vox.filter(*downsampled_kinect_ptr);
     cout << "done voxel filtering" << endl;
 
+    // TODO: Determine whether the data is or is not already transformed. If it is not, transform it.
+
+    // TODO: find top of can in the downsampled_kinect_ptr cloud
+
+    //Cut off everything below one meter...
+    pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
+    pass.setInputCloud(downsampled_kinect_ptr); //set the cloud we want to operate on--pass via a pointer
+    pass.setFilterFieldName("z"); // we will "filter" based on points that lie within some range of z-value
+    pass.setFilterLimits(1.0, 2.0); //here is the range: z value near zero, -0.02<z<0.02
+    pass.filter(indices); //  this will return the indices of the points in   transformed_cloud_ptr that pass our test
+
+    // TODO: find coplanar points with top of can
+
+    // TODO: put those coplanaer points into this variable:
+
     cout << "num bytes in original cloud data = " << pclKinect_clr_ptr->points.size() << endl;
     cout << "num bytes in filtered cloud data = " << downsampled_kinect_ptr->points.size() << endl; // ->data.size()<<endl;    
     pcl::toROSMsg(*downsampled_kinect_ptr, downsampled_cloud); //convert to ros message for publication and display
 
-    cout << " select a patch of points to find corresponding plane..." << endl; //prompt user action
-    //loop to test for new selected-points inputs and compute and display corresponding planar fits 
-    while (ros::ok()) {
-    	// TODO: find top of can in the downsampled_kinect_ptr cloud
-
-    	// TODO: find coplanar points with top of can
-
-    	// TODO: put those coplanaer points into this variable:
-    	vector<int> indices;
-
-        pcl::copyPointCloud(*downsampled_kinect_ptr, indices, *plane_pts_ptr); //extract these pts into new cloud
-        //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
-        pcl::toROSMsg(*plane_pts_ptr, ros_planar_cloud); //convert to ros message for publication and display
+    pcl::copyPointCloud(*downsampled_kinect_ptr, indices, *plane_pts_ptr); //extract these pts into new cloud
+    //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
+    pcl::toROSMsg(*plane_pts_ptr, ros_planar_cloud); //convert to ros message for publication and display
         
-        pubCloud.publish(ros_cloud); // will not need to keep republishing if display setting is persistent
-        pubPlane.publish(ros_planar_cloud); // display the set of points computed to be coplanar w/ selection
-        pubDnSamp.publish(downsampled_cloud); //can directly publish a pcl::PointCloud2!!
-        ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
-        ros::Duration(0.1).sleep();
-    }
+    pubCloud.publish(ros_cloud); // will not need to keep republishing if display setting is persistent
+    pubPlane.publish(ros_planar_cloud); // display the set of points computed to be coplanar w/ selection
+    pubDnSamp.publish(downsampled_cloud); //can directly publish a pcl::PointCloud2!!
+    ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
+    ros::Duration(0.1).sleep();
 
     return 0;
 }
