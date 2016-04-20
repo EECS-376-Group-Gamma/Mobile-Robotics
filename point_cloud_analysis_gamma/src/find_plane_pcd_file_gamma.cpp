@@ -11,6 +11,7 @@
 #include <ros/ros.h> 
 #include <stdlib.h>
 #include <math.h>
+#include <iterator>
 
 #include <sensor_msgs/PointCloud2.h> 
 #include <pcl_ros/point_cloud.h> //to convert between PCL and ROS
@@ -32,6 +33,9 @@
 
 
 using namespace std;
+
+const double MIN_HEIGHT = 1.0;
+const double MAX_HEIGHT = 2.0;
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "plane_finder"); //node name
@@ -80,8 +84,24 @@ int main(int argc, char** argv) {
     pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
     pass.setInputCloud(downsampled_kinect_ptr); //set the cloud we want to operate on--pass via a pointer
     pass.setFilterFieldName("z"); // we will "filter" based on points that lie within some range of z-value
-    pass.setFilterLimits(1.0, 2.0); //here is the range: z value near zero, -0.02<z<0.02
-    pass.filter(indices); //  this will return the indices of the points in   transformed_cloud_ptr that pass our test
+    pass.setFilterLimits(MIN_HEIGHT, MAX_HEIGHT); //here is the range: z value near zero, -0.02<z<0.02
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr filter_output_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pass.filter(*filter_output_ptr); //  this will return the indices of the points in   transformed_cloud_ptr that pass our test
+
+    //Now, get the height of the table.
+    
+    //While we still have points that we can cull:
+    Eigen::Vector3f ideal(0.0, 0.0, 1.0);
+    while(ros::ok()){
+        Eigen::Vector3f current_normal;
+        double d;
+        PclUtilsGamma::fit_points_to_plane(filter_output_ptr, current_normal, d);
+        for(Iterator i = filter_output_ptr.begin(); i = i.next(); i++){
+
+        }
+    }
+
+    //Then look the can height above.
 
     // TODO: find coplanar points with top of can
 

@@ -217,6 +217,23 @@ void PclUtilsGamma::fit_points_to_plane(Eigen::MatrixXf points_mat, Eigen::Vecto
 //get pts from cloud, pack the points into an Eigen::MatrixXf, then use above
 // fit_points_to_plane fnc
 
+void PclUtilsGamma::fit_points_to_plane(pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_cloud_ptr, Eigen::Vector3f &plane_normal, double &plane_dist) {
+    Eigen::MatrixXf points_mat;
+    Eigen::Vector3f cloud_pt;
+    //populate points_mat from cloud data;
+
+    int npts = input_cloud_ptr->points.size();
+    points_mat.resize(3, npts);
+
+    //somewhat odd notation: getVector3fMap() reading OR WRITING points from/to a pointcloud, with conversions to/from Eigen
+    for (int i = 0; i < npts; ++i) {
+        cloud_pt = input_cloud_ptr->points[i].getVector3fMap();
+        points_mat.col(i) = cloud_pt;
+    }
+    fit_points_to_plane(points_mat, plane_normal, plane_dist);
+
+}
+
 void PclUtilsGamma::fit_points_to_plane(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr, Eigen::Vector3f &plane_normal, double &plane_dist) {
     Eigen::MatrixXf points_mat;
     Eigen::Vector3f cloud_pt;
