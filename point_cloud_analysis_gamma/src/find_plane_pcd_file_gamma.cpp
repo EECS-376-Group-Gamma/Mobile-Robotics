@@ -8,7 +8,7 @@
 // voxel-grid filtering: pcl::VoxelGrid,  setInputCloud(), setLeafSize(), filter()
 //wsn March 2016
 
-#include<ros/ros.h> 
+#include <ros/ros.h> 
 #include <stdlib.h>
 #include <math.h>
 
@@ -28,15 +28,10 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/voxel_grid.h> 
 
-#include <pcl_utils/pcl_utils.h>  //a local library with some utility fncs
+#include <point_cloud_analysis_gamma/pcl_utils_gamma.h>  //a local library with some utility fncs
 
 
 using namespace std;
-extern PclUtils *g_pcl_utils_ptr;
-
-//this fnc is defined in a separate module, find_indices_of_plane_from_patch.cpp
-extern void find_indices_of_plane_from_patch(pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_cloud_ptr,
-        pcl::PointCloud<pcl::PointXYZ>::Ptr patch_cloud_ptr, vector<int> &indices);
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "plane_finder"); //node name
@@ -81,30 +76,24 @@ int main(int argc, char** argv) {
     cout << "num bytes in filtered cloud data = " << downsampled_kinect_ptr->points.size() << endl; // ->data.size()<<endl;    
     pcl::toROSMsg(*downsampled_kinect_ptr, downsampled_cloud); //convert to ros message for publication and display
 
-    PclUtils pclUtils(&nh); //instantiate a PclUtils object--a local library w/ some handy fncs
-    g_pcl_utils_ptr = &pclUtils; // make this object shared globally, so above fnc can use it too
-
     cout << " select a patch of points to find corresponding plane..." << endl; //prompt user action
     //loop to test for new selected-points inputs and compute and display corresponding planar fits 
     while (ros::ok()) {
-        if (pclUtils.got_selected_points()) { //here if user selected a new patch of points
-            pclUtils.reset_got_selected_points(); // reset for a future trigger
-            pclUtils.get_copy_selected_points(selected_pts_cloud_ptr); //get a copy of the selected points
-            cout << "got new patch with number of selected pts = " << selected_pts_cloud_ptr->points.size() << endl;
+    	// TODO: find top of can in the downsampled_kinect_ptr cloud
 
-            //find pts coplanar w/ selected patch, using PCL methods in above-defined function
-            //"indices" will get filled with indices of points that are approx co-planar with the selected patch
-            // can extract indices from original cloud, or from voxel-filtered (down-sampled) cloud
-            //find_indices_of_plane_from_patch(pclKinect_clr_ptr, selected_pts_cloud_ptr, indices);
-            find_indices_of_plane_from_patch(downsampled_kinect_ptr, selected_pts_cloud_ptr, indices);
-            pcl::copyPointCloud(*downsampled_kinect_ptr, indices, *plane_pts_ptr); //extract these pts into new cloud
-            //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
-            pcl::toROSMsg(*plane_pts_ptr, ros_planar_cloud); //convert to ros message for publication and display
-        }
+    	// TODO: find coplanar points with top of can
+
+    	// TODO: put those coplanaer points into this variable:
+    	vector<int> indices;
+
+        pcl::copyPointCloud(*downsampled_kinect_ptr, indices, *plane_pts_ptr); //extract these pts into new cloud
+        //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
+        pcl::toROSMsg(*plane_pts_ptr, ros_planar_cloud); //convert to ros message for publication and display
+        
         pubCloud.publish(ros_cloud); // will not need to keep republishing if display setting is persistent
         pubPlane.publish(ros_planar_cloud); // display the set of points computed to be coplanar w/ selection
         pubDnSamp.publish(downsampled_cloud); //can directly publish a pcl::PointCloud2!!
-        ros::spinOnce(); //pclUtils needs some spin cycles to invoke callbacks for new selected points
+        ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
         ros::Duration(0.1).sleep();
     }
 
