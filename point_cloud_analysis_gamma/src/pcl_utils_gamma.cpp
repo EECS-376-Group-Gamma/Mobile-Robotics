@@ -234,6 +234,7 @@ void PclUtilsGamma::fit_points_to_plane(pcl::PointCloud<pcl::PointXYZRGB>::Ptr i
 
 }
 
+//Color version, because PCL is difficult like that.
 void PclUtilsGamma::fit_points_to_plane(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr, Eigen::Vector3f &plane_normal, double &plane_dist) {
     Eigen::MatrixXf points_mat;
     Eigen::Vector3f cloud_pt;
@@ -913,4 +914,20 @@ void PclUtilsGamma::selectCB(const sensor_msgs::PointCloud2ConstPtr& cloud) {
     ROS_INFO("done w/ selected-points callback");
 
     got_selected_points_ = true;
+}
+
+float PclUtilsGamma::epsilon_tolerance(PointCloud<pcl::PointXYZRGB>::Ptr inputCloud){
+    float min_z = FLT_MAX;
+    float max_z = -FLT_MAX;
+
+    for(int i = 0; i < inputCloud->size(); i++){
+        if(inputCloud->at(i).z < min_z){
+            min_z = inputCloud->at(i).z;
+        }
+        if(inputCloud->at(i).z > max_z){
+            max_z = inputCloud->at(i).z;
+        }
+    }
+
+    return max_z - min_z;
 }

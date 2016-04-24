@@ -37,6 +37,8 @@ using namespace std;
 const double MIN_HEIGHT = 1.0;
 const double MAX_HEIGHT = 2.0;
 
+const double TABLE_TOLERANCE = 0.4;
+
 int main(int argc, char** argv) {
     ros::init(argc, argv, "plane_finder"); //node name
     ros::NodeHandle nh;
@@ -78,8 +80,6 @@ int main(int argc, char** argv) {
 
     // TODO: Determine whether the data is or is not already transformed. If it is not, transform it.
 
-    // TODO: find top of can in the downsampled_kinect_ptr cloud
-
     //Cut off everything below one meter...
     pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
     pass.setInputCloud(downsampled_kinect_ptr); //set the cloud we want to operate on--pass via a pointer
@@ -89,17 +89,36 @@ int main(int argc, char** argv) {
     pass.filter(*filter_output_ptr); //  this will return the indices of the points in   transformed_cloud_ptr that pass our test
 
     //Now, get the height of the table.
-    
-    //While we still have points that we can cull:
     Eigen::Vector3f ideal(0.0, 0.0, 1.0);
-    while(ros::ok()){
+    PclUtilsGamma p = PclUtilsGamma(&nh);
+    //While we still have points that we can cull:
+    while(PclUtilsGamma::epsilon_tolerance(filter_output_ptr) > TABLE_TOLERANCE && ros::ok()){
         Eigen::Vector3f current_normal;
         double d;
-        PclUtilsGamma::fit_points_to_plane(filter_output_ptr, current_normal, d);
-        for(Iterator i = filter_output_ptr.begin(); i = i.next(); i++){
-
+        p.fit_points_to_plane(filter_output_ptr, current_normal, d);
+        for(
+            pcl::PointCloud<pcl::PointXYZRGB>::iterator i = filter_output_ptr->begin();
+            i != filter_output_ptr->end();
+        ){
+            pcl::PointXYZRGB ptemp = pcl::PointXYZRGB(*i);
+            i = filter_output_ptr -> erase(i);
+            Eigen::Vector3f experimental_normal;
+            p.fit_points_to_plane(filter_output_ptr, experimental_normal, d);
+            if(experimental_normal.dot(ideal) <= current_normal.dot(ideal)){
+                //It is bad that we removed
+                i = filter_output_ptr->insert(i, ptemp);
+                i++;
+            }
         }
     }
+
+    float sum_z = 0;
+    for(int i = 0; i < filter_output_ptr -> size(); i++){
+        sum_z = sum_z + filter_output_ptr->at(i).z;
+    }
+    sum_z = sum_z / filter_output_ptr->size();
+
+    ROS_ERROR("WE GOT A TABLE HEIGHT OF %f", sum_z);
 
     //Then look the can height above.
 

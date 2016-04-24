@@ -65,8 +65,7 @@ public:
     Eigen::Vector3f  compute_centroid(pcl::PointCloud<pcl::PointXYZ> &input_cloud);
     
     void fit_points_to_plane(pcl::PointCloud<pcl::PointXYZRGB>::Ptr input_cloud_ptr,Eigen::Vector3f &plane_normal, double &plane_dist);
-        //Color version
-    void fit_points_to_plane(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr,Eigen::Vector3f &plane_normal, double &plane_dist);
+	void fit_points_to_plane(pcl::PointCloud<pcl::PointXYZ>::Ptr input_cloud_ptr,Eigen::Vector3f &plane_normal, double &plane_dist);
     //void fit_xformed_selected_pts_to_plane(Eigen::Vector3f &plane_normal, double &plane_dist);  
 
 // 
@@ -156,10 +155,6 @@ public:
     void find_indices_color_match(vector<int> &input_indices,
                     Eigen::Vector3d normalized_avg_color,
                     double color_match_thresh, vector<int> &output_indices);    
-
-    //Added this guy:
-    static float epsilon_tolerance(PointCloud<pcl::PointXYZRGB>::Ptr inputCloud);
-
 
 private:
     ros::NodeHandle nh_; 
