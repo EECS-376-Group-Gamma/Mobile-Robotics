@@ -34,14 +34,27 @@
 
 using namespace std;
 
-const double MIN_HEIGHT = 1.0;
-const double MAX_HEIGHT = 2.0;
+const double MIN_HEIGHT = 0.8;
+const double MAX_HEIGHT = 1.6;
 
 const double TABLE_TOLERANCE = 0.4;
 
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr incoming(new pcl::PointCloud<pcl::PointXYZRGB>);
+bool ready;
+
+void kinectCB(const sensor_msgs::PointCloud2ConstPtr& c) {//Well THIS is unnecessarily complicated...
+    if (!ready){
+        pcl::fromROSMsg(*c, *incoming);
+        ready = true;
+    }
+}
+
+
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "plane_finder"); //node name
+    ros::init(argc, argv, "can_finder"); //node name
     ros::NodeHandle nh;
+
+    //Are all of these ACTUALLY needed?
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr pclKinect_clr_ptr(new pcl::PointCloud<pcl::PointXYZRGB>); //pointer for color version of pointcloud
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr plane_pts_ptr(new pcl::PointCloud<pcl::PointXYZRGB>); //pointer for pointcloud of planar points found
     pcl::PointCloud<pcl::PointXYZ>::Ptr selected_pts_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>); //ptr to selected pts from Rvis tool
@@ -49,7 +62,16 @@ int main(int argc, char** argv) {
 
     vector<int> indices;
 
-    //load a PCD file using pcl::io function; alternatively, could subscribe to Kinect messages    
+    //Grab a snapshot of the incoming point cloud.
+    ready = false;
+    ros::Subscriber pcs = nh.subscribe("/kinect/depth/points", 1, kinectCB);
+    ROS_INFO("Waiting for a message from the Kinect...");
+    while(!ready && ros::ok()){
+    	ros::spinOnce();
+    }
+    ROS_INFO("GOT IT!");
+
+    /*//load a PCD file using pcl::io function; alternatively, could subscribe to Kinect messages    
     string fname;
     cout << "enter pcd file name: "; //prompt to enter file name
     cin >> fname;
@@ -59,24 +81,24 @@ int main(int argc, char** argv) {
         return (-1);
     }
     //PCD file does not seem to record the reference frame;  set frame_id manually
-    pclKinect_clr_ptr->header.frame_id = "camera_depth_optical_frame";
+    pclKinect_clr_ptr->header.frame_id = "world";*/
 
     //will publish  pointClouds as ROS-compatible messages; create publishers; note topics for rviz viewing
-    ros::Publisher pubCloud = nh.advertise<sensor_msgs::PointCloud2> ("/pcd", 1);
-    ros::Publisher pubPlane = nh.advertise<sensor_msgs::PointCloud2> ("planar_pts", 1);
-    ros::Publisher pubDnSamp = nh.advertise<sensor_msgs::PointCloud2> ("downsampled_pcd", 1);
+    ros::Publisher cloudIn = nh.advertise<sensor_msgs::PointCloud2> ("/pcd_original", 1);
+    ros::Publisher cloudOut = nh.advertise<sensor_msgs::PointCloud2> ("/pcd_final", 1);
 
-    sensor_msgs::PointCloud2 ros_cloud, ros_planar_cloud, downsampled_cloud; //here are ROS-compatible messages
-    pcl::toROSMsg(*pclKinect_clr_ptr, ros_cloud); //convert from PCL cloud to ROS message this way
-
+    sensor_msgs::PointCloud2 input_cloud, output_cloud; //here are ROS-compatible messages
     //use voxel filtering to downsample the original cloud:
     cout << "starting voxel filtering" << endl;
     pcl::VoxelGrid<pcl::PointXYZRGB> vox;
-    vox.setInputCloud(pclKinect_clr_ptr);
+    vox.setInputCloud(incoming);
 
     vox.setLeafSize(0.02f, 0.02f, 0.02f);
     vox.filter(*downsampled_kinect_ptr);
     cout << "done voxel filtering" << endl;
+
+    cout << "num bytes in original cloud data = " << incoming->points.size() << endl;
+    cout << "num bytes in filtered cloud data = " << downsampled_kinect_ptr->points.size() << endl; // ->data.size()<<endl;    
 
     // TODO: Determine whether the data is or is not already transformed. If it is not, transform it.
 
@@ -85,14 +107,32 @@ int main(int argc, char** argv) {
     pass.setInputCloud(downsampled_kinect_ptr); //set the cloud we want to operate on--pass via a pointer
     pass.setFilterFieldName("z"); // we will "filter" based on points that lie within some range of z-value
     pass.setFilterLimits(MIN_HEIGHT, MAX_HEIGHT); //here is the range: z value near zero, -0.02<z<0.02
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr filter_output_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
-    pass.filter(*filter_output_ptr); //  this will return the indices of the points in   transformed_cloud_ptr that pass our test
+    std::vector<int> filter_output_indices;
+    pass.filter(filter_output_indices); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
 
-    //Now, get the height of the table.
+    pcl::copyPointCloud(*downsampled_kinect_ptr, filter_output_indices, *plane_pts_ptr); //extract these pts into new cloud*/
+    //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
+    pcl::toROSMsg(*downsampled_kinect_ptr, input_cloud);
+    pcl::toROSMsg(*plane_pts_ptr, output_cloud); //convert to ros message for publication and display
+
+    //input_cloud.header.frame_id = "camera_depth_optical_frame";
+    //output_cloud.header.frame_id = "camera_depth_optical_frame";
+
+    while(true && ros::ok()){
+    cloudIn.publish(input_cloud); // will not need to keep republishing if display setting is persistent
+    cloudOut.publish(output_cloud); //can directly publish a pcl::PointCloud2!!
+    ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
+    ros::Duration(0.1).sleep();
+}
+
+_exit(0);
+
+   /* //Now, get the height of the table.
     Eigen::Vector3f ideal(0.0, 0.0, 1.0);
     PclUtilsGamma p = PclUtilsGamma(&nh);
     //While we still have points that we can cull:
     while(PclUtilsGamma::epsilon_tolerance(filter_output_ptr) > TABLE_TOLERANCE && ros::ok()){
+    	ROS_INFO("Tolerance of %f, %lu points remain.",PclUtilsGamma::epsilon_tolerance(filter_output_ptr), filter_output_ptr->size());
         Eigen::Vector3f current_normal;
         double d;
         p.fit_points_to_plane(filter_output_ptr, current_normal, d);
@@ -138,7 +178,7 @@ int main(int argc, char** argv) {
     pubPlane.publish(ros_planar_cloud); // display the set of points computed to be coplanar w/ selection
     pubDnSamp.publish(downsampled_cloud); //can directly publish a pcl::PointCloud2!!
     ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
-    ros::Duration(0.1).sleep();
+    ros::Duration(0.1).sleep();*/
 
     return 0;
 }
