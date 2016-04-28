@@ -10,7 +10,7 @@ Start up the simulator with:
 Enable the robot with:
 `rosrun baxter_tools enable_robot.py -e`
 Start up CWRU nodes with:
-`roslaunch baxter_launch_files baxter_nodes.launch`
+`roslaunch coordinator_gamma baxter_nodes_gamma.launch`
 
 Then trigger the behavior with:
 `rostopic pub Alexa_codes std_msgs/UInt32 100`

@@ -3,6 +3,6 @@
 Your description goes here
 
 ## Example usage
-
-## Running tests/demos
+`rosrun navigator_gamma navigator_gamma`
+`rosrun navigator_gamma example_navigator_action_client_gamma`
     

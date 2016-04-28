@@ -16,6 +16,6 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
 
 
 ## Example usage
-`rosrun object_finder object_finder_as`
-`rosrun object_finder example_object_finder_action_client`
+`rosrun object_finder_gamma object_finder_as_gamma`
+`rosrun object_finder_gamma example_object_finder_action_client_gamma`
     
