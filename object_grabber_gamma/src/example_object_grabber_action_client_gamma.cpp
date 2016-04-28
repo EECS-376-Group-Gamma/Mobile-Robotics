@@ -11,7 +11,7 @@
 #include <Eigen/Geometry>
 
 void objectGrabberDoneCb(const actionlib::SimpleClientGoalState& state,
-        const object_grabber::object_grabberResultConstPtr& result) {
+        const object_grabber_gamma::object_grabberResultConstPtr& result) {
     ROS_INFO(" objectGrabberDoneCb: server responded with state [%s]", state.toString().c_str());
     ROS_INFO("got result output = %d; ",result->return_code);
 }
@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh; //standard ros node handle    
     
     
-    actionlib::SimpleActionClient<object_grabber::object_grabberAction> object_grabber_ac("objectGrabberActionServer", true);
+    actionlib::SimpleActionClient<object_grabber_gamma::object_grabberAction> object_grabber_ac("objectGrabberActionServer", true);
     
     // attempt to connect to the server:
     ROS_INFO("waiting for server: ");
@@ -34,8 +34,8 @@ int main(int argc, char** argv) {
     }
     ROS_INFO("connected to object_grabber action server"); // if here, then we connected to the server; 
      
-    object_grabber::object_grabberGoal object_grabber_goal;
-    object_grabber::object_grabberResult object_grabber_result;
+    object_grabber_gamma::object_grabberGoal object_grabber_goal;
+    object_grabber_gamma::object_grabberResult object_grabber_result;
     geometry_msgs::PoseStamped perceived_object_pose;
     
     //populate a viable object pose; actually, this is a Merry right-hand pose
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     perceived_object_pose.pose.orientation.w = 0.109;
     
     //stuff a goal message:
-    object_grabber_goal.object_code = object_grabber::object_grabberGoal::COKE_CAN; //specify the object to be grabbed
+    object_grabber_goal.object_code = object_grabber_gamma::object_grabberGoal::COKE_CAN; //specify the object to be grabbed
     object_grabber_goal.object_frame = perceived_object_pose;
     ROS_INFO("sending goal: ");
         object_grabber_ac.sendGoal(object_grabber_goal,&objectGrabberDoneCb); // we could also name additional callback functions here, if desired

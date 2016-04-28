@@ -26,14 +26,14 @@ bool g_get_coke_trigger=false;
 const int ALEXA_GET_COKE_CODE= 100;
 
 void objectFinderDoneCb(const actionlib::SimpleClientGoalState& state,
-        const object_finder::objectFinderResultConstPtr& result) {
+        const object_finder_gamma::objectFinderResultConstPtr& result) {
     ROS_INFO(" objectFinderDoneCb: server responded with state [%s]", state.toString().c_str());
     g_found_object_code=result->found_object_code;
     ROS_INFO("got object code response = %d; ",g_found_object_code);
-    if (g_found_object_code==object_finder::objectFinderResult::OBJECT_CODE_NOT_RECOGNIZED) {
+    if (g_found_object_code == object_finder_gamma::objectFinderResult::OBJECT_CODE_NOT_RECOGNIZED) {
         ROS_WARN("object code not recognized");
     }
-    else if (g_found_object_code==object_finder::objectFinderResult::OBJECT_FOUND) {
+    else if (g_found_object_code == object_finder_gamma::objectFinderResult::OBJECT_FOUND) {
         ROS_INFO("found object!");
          g_perceived_object_pose= result->object_pose;
          ROS_INFO("got pose x,y,z = %f, %f, %f",g_perceived_object_pose.pose.position.x,
@@ -46,7 +46,7 @@ void objectFinderDoneCb(const actionlib::SimpleClientGoalState& state,
 }
 
 void objectGrabberDoneCb(const actionlib::SimpleClientGoalState& state,
-        const object_grabber::object_grabberResultConstPtr& result) {
+        const object_grabber_gamma::object_grabberResultConstPtr& result) {
     ROS_INFO(" objectGrabberDoneCb: server responded with state [%s]", state.toString().c_str());
     ROS_INFO("got result output = %d; ",result->return_code);
     g_object_grabber_return_code = result->return_code;
@@ -84,8 +84,8 @@ int main(int argc, char** argv) {
     
     ros::Subscriber alexa_code = nh.subscribe("/Alexa_codes", 1, alexaCB);
     
-    actionlib::SimpleActionClient<object_finder::objectFinderAction> object_finder_ac("objectFinderActionServer", true);
-    actionlib::SimpleActionClient<object_grabber::object_grabberAction> object_grabber_ac("objectGrabberActionServer", true);
+    actionlib::SimpleActionClient<object_finder_gamma::objectFinderAction> object_finder_ac("objectFinderActionServer", true);
+    actionlib::SimpleActionClient<object_grabber_gamma::object_grabberAction> object_grabber_ac("objectGrabberActionServer", true);
     actionlib::SimpleActionClient<navigator::navigatorAction> navigator_ac("navigatorActionServer", true);
 
     // attempt to connect to the server:
@@ -121,8 +121,8 @@ int main(int argc, char** argv) {
     ROS_INFO("connected to navigator action server"); // if here, then we connected to the server; 
 
     //specifications for what we are seeking:
-    object_finder::objectFinderGoal object_finder_goal;   
-    object_grabber::object_grabberGoal object_grabber_goal;
+    object_finder_gamma::objectFinderGoal object_finder_goal;   
+    object_grabber_gamma::object_grabberGoal object_grabber_goal;
     navigator::navigatorGoal navigation_goal;
     
     bool finished_before_timeout;
@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
                 
                 
     //assume we have reached the table; look for the Coke can:
-    object_finder_goal.object_id=object_finder::objectFinderGoal::COKE_CAN_UPRIGHT; //specify object of interest
+    object_finder_goal.object_id=object_finder_gamma::objectFinderGoal::COKE_CAN_UPRIGHT; //specify object of interest
     object_finder_goal.known_surface_ht=true; //we'll say we know the table height
     object_finder_goal.surface_ht = 0.05;  // and specify the height, relative to torso; TUNE THIS
     //try to find the object:
@@ -171,12 +171,12 @@ int main(int argc, char** argv) {
             return 1; // halt with failure
         }
      //SHOULD examine the return code,   
-        if (g_found_object_code!= object_finder::objectFinderResult::OBJECT_FOUND) {
+        if (g_found_object_code!= object_finder_gamma::objectFinderResult::OBJECT_FOUND) {
             ROS_WARN("could not find object; quitting!");
             return 1;
         }
      //if here, then presumably have a valid pose for object of interest; grab it!       
-        object_grabber_goal.object_code = object_grabber::object_grabberGoal::COKE_CAN; //specify the object to be grabbed 
+        object_grabber_goal.object_code = object_grabber_gamma::object_grabberGoal::COKE_CAN; //specify the object to be grabbed 
     object_grabber_goal.object_frame = g_perceived_object_pose;
     ROS_INFO("sending goal to grab object: ");
         object_grabber_ac.sendGoal(object_grabber_goal,&objectGrabberDoneCb); 
@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
             ROS_WARN("giving up waiting on result; quitting ");
             return 1;
         }
-        if (g_object_grabber_return_code!= object_grabber::object_grabberResult::OBJECT_ACQUIRED) {
+        if (g_object_grabber_return_code!= object_grabber_gamma::object_grabberResult::OBJECT_ACQUIRED) {
             ROS_WARN("failed to grab object; giving up!");
             return 1;
         }

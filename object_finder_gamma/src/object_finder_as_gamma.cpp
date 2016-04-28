@@ -19,12 +19,12 @@ private:
     // this class will own a "SimpleActionServer" called "as_".
     // it will communicate using messages defined in example_action_server/action/demo.action
     // the type "demoAction" is auto-generated from our name "demo" and generic name "Action"
-    actionlib::SimpleActionServer<object_finder::objectFinderAction> object_finder_as_;
+    actionlib::SimpleActionServer<object_finder_gamma::objectFinderAction> object_finder_as_;
     
     // here are some message types to communicate with our client(s)
-    object_finder::objectFinderGoal goal_; // goal message, received from client
-    object_finder::objectFinderResult result_; // put results here, to be sent back to the client when done w/ goal
-    object_finder::objectFinderFeedback feedback_; // not used in this example; 
+    object_finder_gamma::objectFinderGoal goal_; // goal message, received from client
+    object_finder_gamma::objectFinderResult result_; // put results here, to be sent back to the client when done w/ goal
+    object_finder_gamma::objectFinderFeedback feedback_; // not used in this example; 
     // would need to use: as_.publishFeedback(feedback_); to send incremental feedback to the client
 
     PclUtils pclUtils_;
@@ -38,7 +38,7 @@ public:
     ~ObjectFinder(void) {
     }
     // Action Interface
-    void executeCB(const actionlib::SimpleActionServer<object_finder::objectFinderAction>::GoalConstPtr& goal);
+    void executeCB(const actionlib::SimpleActionServer<object_finder_gamma::objectFinderAction>::GoalConstPtr& goal);
 };
 
 
@@ -74,7 +74,7 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
 // defined in our package, "example_action_server", in the subdirectory "action", called "demo.action"
 // The name "demo" is prepended to other message types created automatically during compilation.
 // e.g.,  "demoAction" is auto-generated from (our) base name "demo" and generic name "Action"
-void ObjectFinder::executeCB(const actionlib::SimpleActionServer<object_finder::objectFinderAction>::GoalConstPtr& goal) {
+void ObjectFinder::executeCB(const actionlib::SimpleActionServer<object_finder_gamma::objectFinderAction>::GoalConstPtr& goal) {
     int object_id = goal->object_id;
     geometry_msgs::PoseStamped object_pose;
     bool known_surface_ht = goal->known_surface_ht;
@@ -84,12 +84,12 @@ void ObjectFinder::executeCB(const actionlib::SimpleActionServer<object_finder::
     }
     bool found_object=false;
     switch(object_id) {
-        case object_finder::objectFinderGoal::COKE_CAN_UPRIGHT: 
+        case object_finder_gamma::objectFinderGoal::COKE_CAN_UPRIGHT: 
               //specialized function to find an upright Coke can on a horizontal surface of known height:
                found_object = find_upright_coke_can(surface_height,object_pose); //special case for Coke can;
                if (found_object) {
                    ROS_INFO("found upright Coke can!");
-                   result_.found_object_code = object_finder::objectFinderResult::OBJECT_FOUND;
+                   result_.found_object_code = object_finder_gamma::objectFinderResult::OBJECT_FOUND;
                    result_.object_pose = object_pose;
                    object_finder_as_.setSucceeded(result_);
                }
@@ -100,7 +100,7 @@ void ObjectFinder::executeCB(const actionlib::SimpleActionServer<object_finder::
                break;
         default:
              ROS_WARN("this object ID is not implemented");
-             result_.found_object_code = object_finder::objectFinderResult::OBJECT_CODE_NOT_RECOGNIZED; 
+             result_.found_object_code = object_finder_gamma::objectFinderResult::OBJECT_CODE_NOT_RECOGNIZED; 
              object_finder_as_.setAborted(result_);
             }
   
