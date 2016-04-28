@@ -139,10 +139,10 @@ int main(int argc, char** argv) {
     pass.filter(*sliced_cloud_ptr); //  this will return the indices of the points in transformed_cloud_ptr that pass our test*/
 
  	pcl::PointCloud<pcl::PointXYZ>::Ptr mono_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>);
-    copyPointCloud(*sliced_cloud_ptr, *mono_cloud_ptr);
+    //copyPointCloud(*sliced_cloud_ptr, *mono_cloud_ptr);
 
     //Now, get the plane for the table
-    pcl::SACSegmentation<pcl::PointXYZ> segmentor;
+    pcl::SACSegmentation<pcl::PointXYZRGB> segmentor;
 
     segmentor.setModelType(pcl::SACMODEL_PLANE);
     segmentor.setMethodType(pcl::SAC_RANSAC);
@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
     segmentor.setDistanceThreshold (0.01);
 
 
-    segmentor.setInputCloud(mono_cloud_ptr);
+    segmentor.setInputCloud(sliced_cloud_ptr);
 	pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
 	pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
 
@@ -175,6 +175,52 @@ int main(int argc, char** argv) {
 	z_avg = z_avg / inliers->indices.size();
 	ROS_INFO("Table is about %f", z_avg);
 
+	//Go ahead and get rid of the table...
+	pcl::ExtractIndices<PointXYZRGB> extract;
+	extract.setInputCloud(sliced_cloud_ptr);
+	extract.setIndices(inliers);
+ 	extract.setNegative(true);
+ 	extract.filter(*sliced_cloud_ptr);
+
+ 	//Can will be ABOVE the table...
+ 	pass.setInputCloud(sliced_cloud_ptr); //set the cloud we want to operate on--pass via a pointer
+ 	pass.setFilterLimits(z_avg, MAX_HEIGHT); //here is the range: z value near zero, -0.02<z<0.02
+    pass.filter(*sliced_cloud_ptr); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
+
+    //Get the normals
+    pcl::search::KdTree<PointXYZRGB>::Ptr tree (new pcl::search::KdTree<PointXYZRGB> ());
+    pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+    pcl::NormalEstimation<PointXYZRGB, pcl::Normal> ne;
+    ne.setSearchMethod (tree);
+	ne.setInputCloud (sliced_cloud_ptr);
+	ne.setKSearch (50);
+	ne.compute(*cloud_normals);
+    ROS_INFO("Got normals");
+
+    //Find a cylindrical thing matching that description:
+    pcl::SACSegmentationFromNormals<PointXYZRGB, pcl::Normal> nseg;
+    nseg.setOptimizeCoefficients (true);
+    nseg.setModelType (pcl::SACMODEL_CYLINDER);
+  	nseg.setMethodType (pcl::SAC_RANSAC);
+  	nseg.setNormalDistanceWeight (0.1);
+  	nseg.setMaxIterations (10000);
+  	nseg.setDistanceThreshold (0.05);
+  	nseg.setRadiusLimits (0, 0.1);
+  	nseg.setInputCloud (sliced_cloud_ptr);
+  	nseg.setInputNormals (cloud_normals);
+
+  	nseg.segment (*inliers, *coefficients);
+
+    extract.setIndices(inliers);
+    extract.setNegative(false);
+    extract.filter(*sliced_cloud_ptr);
+
+    //And find the centroid
+    Eigen::Vector4f centroid;
+    pcl::compute3DCentroid (*sliced_cloud_ptr, centroid);
+
+    ROS_WARN("CALCULATED CENTER OF CAN TO BE (%f, %f, %f)",centroid[0], centroid[1], centroid[2]);
+
     //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
     pcl::toROSMsg(*downsampled_kinect_ptr, input_cloud);
     pcl::toROSMsg(*sliced_cloud_ptr, output_cloud); //convert to ros message for publication and display
@@ -182,12 +228,9 @@ int main(int argc, char** argv) {
     input_cloud.header.frame_id = "kinect_pc_frame";
     output_cloud.header.frame_id = "world";
 
-    while(true && ros::ok()){
-    	cloudIn.publish(input_cloud); // will not need to keep republishing if display setting is persistent
-    	cloudOut.publish(output_cloud); //can directly publish a pcl::PointCloud2!!
-    	ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
-    	ros::Duration(0.1).sleep();
-	}
+    cloudIn.publish(input_cloud); // will not need to keep republishing if display setting is persistent
+    cloudOut.publish(output_cloud); //can directly publish a pcl::PointCloud2!!
+    ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
 
 	_exit(0);
 
