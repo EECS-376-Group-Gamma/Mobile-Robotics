@@ -66,9 +66,10 @@ int main(int argc, char** argv) {
 
     tf::TransformListener lambda;
     tf::StampedTransform tau;
+    ROS_INFO("Waiting for transform...");
     while(ros::ok()){
 	    try{
-	    	lambda.lookupTransform("kinect_pc_frame", "base", ros::Time(0), tau);
+	    	lambda.lookupTransform("base", "kinect_pc_frame", ros::Time(0), tau);
 	    	break;
 	    }
 	    catch (tf::TransformException ex){
@@ -76,6 +77,7 @@ int main(int argc, char** argv) {
    		 	ros::Duration(1.0).sleep();
     	}
     }
+    ROS_INFO("GOT IT!");
 
     //Grab a snapshot of the incoming point cloud.
     ready = false;
@@ -86,23 +88,11 @@ int main(int argc, char** argv) {
     }
     ROS_INFO("GOT IT!");
 
-    /*//load a PCD file using pcl::io function; alternatively, could subscribe to Kinect messages    
-    string fname;
-    cout << "enter pcd file name: "; //prompt to enter file name
-    cin >> fname;
-    if (pcl::io::loadPCDFile<pcl::PointXYZRGB> (fname, *pclKinect_clr_ptr) == -1) //* load the file
-    {
-        ROS_ERROR("Couldn't read file \n");
-        return (-1);
-    }
-    //PCD file does not seem to record the reference frame;  set frame_id manually
-    pclKinect_clr_ptr->header.frame_id = "world";*/
-
     //will publish  pointClouds as ROS-compatible messages; create publishers; note topics for rviz viewing
     ros::Publisher cloudIn = nh.advertise<sensor_msgs::PointCloud2> ("/pcd_original", 1);
     ros::Publisher cloudOut = nh.advertise<sensor_msgs::PointCloud2> ("/pcd_final", 1);
-
     sensor_msgs::PointCloud2 input_cloud, output_cloud; //here are ROS-compatible messages
+
     //use voxel filtering to downsample the original cloud:
     cout << "starting voxel filtering" << endl;
     pcl::VoxelGrid<pcl::PointXYZRGB> vox;
@@ -116,23 +106,27 @@ int main(int argc, char** argv) {
     cout << "num bytes in filtered cloud data = " << downsampled_kinect_ptr->points.size() << endl; // ->data.size()<<endl;    
 
     // Transform into the world frame
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformed_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>); //pointer for color version of pointcloud
+    pcl_ros::transformPointCloud(*downsampled_kinect_ptr, *transformed_cloud_ptr, tau);
 
-
-    //Cut off everything below one meter...
-    pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
-    pass.setInputCloud(downsampled_kinect_ptr); //set the cloud we want to operate on--pass via a pointer
+    //Cut off everything that can't possibly be a table (tatami need not apply)
+	pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
+    pass.setInputCloud(transformed_cloud_ptr); //set the cloud we want to operate on--pass via a pointer
     pass.setFilterFieldName("z"); // we will "filter" based on points that lie within some range of z-value
     pass.setFilterLimits(MIN_HEIGHT, MAX_HEIGHT); //here is the range: z value near zero, -0.02<z<0.02
-    std::vector<int> filter_output_indices;
-    pass.filter(filter_output_indices); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
+    //std::vector<int> filter_output_indices;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr sliced_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pass.filter(*sliced_cloud_ptr); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
 
-    pcl::copyPointCloud(*downsampled_kinect_ptr, filter_output_indices, *plane_pts_ptr); //extract these pts into new cloud*/
+    //pcl::copyPointCloud(*transformed_cloud_ptr, filter_output_indices, *plane_pts_ptr); //extract these pts into new cloud
+
+
     //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
     pcl::toROSMsg(*downsampled_kinect_ptr, input_cloud);
-    pcl::toROSMsg(*plane_pts_ptr, output_cloud); //convert to ros message for publication and display
+    pcl::toROSMsg(*transformed_cloud_ptr, output_cloud); //convert to ros message for publication and display
 
-    //input_cloud.header.frame_id = "camera_depth_optical_frame";
-    //output_cloud.header.frame_id = "camera_depth_optical_frame";
+    input_cloud.header.frame_id = "kinect_pc_frame";
+    output_cloud.header.frame_id = "world";
 
     while(true && ros::ok()){
     cloudIn.publish(input_cloud); // will not need to keep republishing if display setting is persistent
