@@ -36,8 +36,8 @@
 
 using namespace std;
 
-const double MIN_HEIGHT = 0.8;
-const double MAX_HEIGHT = 1.6;
+const double MIN_HEIGHT = -0.5;
+const double MAX_HEIGHT = 0.7;//Gotta make it a little taller to accomodate the can itself...
 
 const double TABLE_TOLERANCE = 0.4;
 
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     ROS_INFO("Waiting for transform...");
     while(ros::ok()){
 	    try{
-	    	lambda.lookupTransform("base", "kinect_pc_frame", ros::Time(0), tau);
+	    	lambda.lookupTransform("world", "kinect_pc_frame", ros::Time(0), tau);
 	    	break;
 	    }
 	    catch (tf::TransformException ex){
@@ -123,17 +123,17 @@ int main(int argc, char** argv) {
 
     //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
     pcl::toROSMsg(*downsampled_kinect_ptr, input_cloud);
-    pcl::toROSMsg(*transformed_cloud_ptr, output_cloud); //convert to ros message for publication and display
+    pcl::toROSMsg(*sliced_cloud_ptr, output_cloud); //convert to ros message for publication and display
 
     input_cloud.header.frame_id = "kinect_pc_frame";
     output_cloud.header.frame_id = "world";
 
     while(true && ros::ok()){
-    cloudIn.publish(input_cloud); // will not need to keep republishing if display setting is persistent
-    cloudOut.publish(output_cloud); //can directly publish a pcl::PointCloud2!!
-    ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
-    ros::Duration(0.1).sleep();
-}
+    	cloudIn.publish(input_cloud); // will not need to keep republishing if display setting is persistent
+    	cloudOut.publish(output_cloud); //can directly publish a pcl::PointCloud2!!
+    	ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
+    	ros::Duration(0.1).sleep();
+	}
 
 _exit(0);
 
