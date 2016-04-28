@@ -34,10 +34,16 @@
 
 #include <tf/transform_listener.h>
 
+#include <pcl/segmentation/sac_segmentation.h>
+
 using namespace std;
 
 const double MIN_HEIGHT = -0.5;
 const double MAX_HEIGHT = 0.7;//Gotta make it a little taller to accomodate the can itself...
+const double MIN_SIDE= -0.5;
+const double MAX_SIDE = 0.5;
+const double MIN_DIST = 0.2;
+const double MAX_DIST = 1.0;
 
 const double TABLE_TOLERANCE = 0.4;
 
@@ -109,7 +115,7 @@ int main(int argc, char** argv) {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformed_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>); //pointer for color version of pointcloud
     pcl_ros::transformPointCloud(*downsampled_kinect_ptr, *transformed_cloud_ptr, tau);
 
-    //Cut off everything that can't possibly be a table (tatami need not apply)
+    //Cut off everything that can't possibly be a table (tatamis need not apply)
 	pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
     pass.setInputCloud(transformed_cloud_ptr); //set the cloud we want to operate on--pass via a pointer
     pass.setFilterFieldName("z"); // we will "filter" based on points that lie within some range of z-value
@@ -118,12 +124,53 @@ int main(int argc, char** argv) {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr sliced_cloud_ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
     pass.filter(*sliced_cloud_ptr); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
 
-    //pcl::copyPointCloud(*transformed_cloud_ptr, filter_output_indices, *plane_pts_ptr); //extract these pts into new cloud
+    /*//Cut off everything that can't possibly be a table (tatamis need not apply)
+    pass.setInputCloud(sliced_cloud_ptr); //set the cloud we want to operate on--pass via a pointer
+    pass.setFilterFieldName("y"); // we will "filter" based on points that lie within some range of z-value
+    pass.setFilterLimits(MIN_SIDE, MAX_SIDE); //here is the range: z value near zero, -0.02<z<0.02
+    //std::vector<int> filter_output_indices;
+    pass.filter(*sliced_cloud_ptr); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
+
+    //Cut off everything that can't possibly be a table (tatamis need not apply)
+    pass.setInputCloud(sliced_cloud_ptr); //set the cloud we want to operate on--pass via a pointer
+    pass.setFilterFieldName("x"); // we will "filter" based on points that lie within some range of z-value
+    pass.setFilterLimits(MIN_DIST, MAX_DIST); //here is the range: z value near zero, -0.02<z<0.02
+    //std::vector<int> filter_output_indices;
+    pass.filter(*sliced_cloud_ptr); //  this will return the indices of the points in transformed_cloud_ptr that pass our test*/
+
+ 	pcl::PointCloud<pcl::PointXYZ>::Ptr mono_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>);
+    copyPointCloud(*sliced_cloud_ptr, *mono_cloud_ptr);
+
+    //Now, get the plane for the table
+    pcl::SACSegmentation<pcl::PointXYZ> segmentor;
+
+    segmentor.setModelType(pcl::SACMODEL_PLANE);
+    segmentor.setMethodType(pcl::SAC_RANSAC);
+    segmentor.setAxis(Eigen::Vector3f(0.0, 0.0, -1.0));
+    segmentor.setEpsAngle(30 * (M_PI / 180));
+    segmentor.setDistanceThreshold (0.01);
+
+
+    segmentor.setInputCloud(mono_cloud_ptr);
+	pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+	pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+
+	segmentor.segment (*inliers, *coefficients);
+
+	pcl::PointCloud<pcl::PointXYZ>::Ptr table_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>);
+	table_cloud_ptr->header = sliced_cloud_ptr->header;
+    table_cloud_ptr->is_dense = sliced_cloud_ptr->is_dense;
+    table_cloud_ptr->width = inliers->indices.size();
+    table_cloud_ptr->height = 1;
+    table_cloud_ptr->points.resize(inliers->indices.size());
+	for(int i = 0; i < inliers->indices.size(); i++){//There HAS to be a better way to do this...
+		table_cloud_ptr->points[i].getVector3fMap() = sliced_cloud_ptr->points[inliers->indices[i]].getVector3fMap();
+	}
 
 
     //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
     pcl::toROSMsg(*downsampled_kinect_ptr, input_cloud);
-    pcl::toROSMsg(*sliced_cloud_ptr, output_cloud); //convert to ros message for publication and display
+    pcl::toROSMsg(*table_cloud_ptr, output_cloud); //convert to ros message for publication and display
 
     input_cloud.header.frame_id = "kinect_pc_frame";
     output_cloud.header.frame_id = "world";
@@ -135,60 +182,7 @@ int main(int argc, char** argv) {
     	ros::Duration(0.1).sleep();
 	}
 
-_exit(0);
-
-   /* //Now, get the height of the table.
-    Eigen::Vector3f ideal(0.0, 0.0, 1.0);
-    PclUtilsGamma p = PclUtilsGamma(&nh);
-    //While we still have points that we can cull:
-    while(PclUtilsGamma::epsilon_tolerance(filter_output_ptr) > TABLE_TOLERANCE && ros::ok()){
-    	ROS_INFO("Tolerance of %f, %lu points remain.",PclUtilsGamma::epsilon_tolerance(filter_output_ptr), filter_output_ptr->size());
-        Eigen::Vector3f current_normal;
-        double d;
-        p.fit_points_to_plane(filter_output_ptr, current_normal, d);
-        for(
-            pcl::PointCloud<pcl::PointXYZRGB>::iterator i = filter_output_ptr->begin();
-            i != filter_output_ptr->end();
-        ){
-            pcl::PointXYZRGB ptemp = pcl::PointXYZRGB(*i);
-            i = filter_output_ptr -> erase(i);
-            Eigen::Vector3f experimental_normal;
-            p.fit_points_to_plane(filter_output_ptr, experimental_normal, d);
-            if(experimental_normal.dot(ideal) <= current_normal.dot(ideal)){
-                //It is bad that we removed
-                i = filter_output_ptr->insert(i, ptemp);
-                i++;
-            }
-        }
-    }
-
-    float sum_z = 0;
-    for(int i = 0; i < filter_output_ptr -> size(); i++){
-        sum_z = sum_z + filter_output_ptr->at(i).z;
-    }
-    sum_z = sum_z / filter_output_ptr->size();
-
-    ROS_ERROR("WE GOT A TABLE HEIGHT OF %f", sum_z);
-
-    //Then look the can height above.
-
-    // TODO: find coplanar points with top of can
-
-    // TODO: put those coplanaer points into this variable:
-
-    cout << "num bytes in original cloud data = " << pclKinect_clr_ptr->points.size() << endl;
-    cout << "num bytes in filtered cloud data = " << downsampled_kinect_ptr->points.size() << endl; // ->data.size()<<endl;    
-    pcl::toROSMsg(*downsampled_kinect_ptr, downsampled_cloud); //convert to ros message for publication and display
-
-    pcl::copyPointCloud(*downsampled_kinect_ptr, indices, *plane_pts_ptr); //extract these pts into new cloud
-    //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
-    pcl::toROSMsg(*plane_pts_ptr, ros_planar_cloud); //convert to ros message for publication and display
-        
-    pubCloud.publish(ros_cloud); // will not need to keep republishing if display setting is persistent
-    pubPlane.publish(ros_planar_cloud); // display the set of points computed to be coplanar w/ selection
-    pubDnSamp.publish(downsampled_cloud); //can directly publish a pcl::PointCloud2!!
-    ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
-    ros::Duration(0.1).sleep();*/
+	_exit(0);
 
     return 0;
 }
