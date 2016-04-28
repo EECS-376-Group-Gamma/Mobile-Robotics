@@ -29,8 +29,10 @@
 #include <pcl/filters/passthrough.h>
 #include <pcl/filters/voxel_grid.h> 
 
-#include <point_cloud_analysis_gamma/pcl_utils_gamma.h>  //a local library with some utility fncs
+#include <point_cloud_analysis_gamma/pcl_utils_gamma.h>  //a local library with some utility fncs.
+//We DID end up changing some things, so it would NOT be a good idea to try to use regular pcl_utils
 
+#include <tf/transform_listener.h>
 
 using namespace std;
 
@@ -61,6 +63,19 @@ int main(int argc, char** argv) {
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr downsampled_kinect_ptr(new pcl::PointCloud<pcl::PointXYZRGB>); //ptr to hold filtered Kinect image
 
     vector<int> indices;
+
+    tf::TransformListener lambda;
+    tf::StampedTransform tau;
+    while(ros::ok()){
+	    try{
+	    	lambda.lookupTransform("kinect_pc_frame", "base", ros::Time(0), tau);
+	    	break;
+	    }
+	    catch (tf::TransformException ex){
+   		 	ROS_ERROR("%s",ex.what());
+   		 	ros::Duration(1.0).sleep();
+    	}
+    }
 
     //Grab a snapshot of the incoming point cloud.
     ready = false;
@@ -100,7 +115,8 @@ int main(int argc, char** argv) {
     cout << "num bytes in original cloud data = " << incoming->points.size() << endl;
     cout << "num bytes in filtered cloud data = " << downsampled_kinect_ptr->points.size() << endl; // ->data.size()<<endl;    
 
-    // TODO: Determine whether the data is or is not already transformed. If it is not, transform it.
+    // Transform into the world frame
+
 
     //Cut off everything below one meter...
     pcl::PassThrough<pcl::PointXYZRGB> pass; //create a pass-through object
