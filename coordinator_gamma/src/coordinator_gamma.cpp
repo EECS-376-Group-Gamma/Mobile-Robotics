@@ -10,7 +10,7 @@
 #include <actionlib/client/terminal_state.h>
 #include <object_finder_gamma/objectFinderAction.h>
 #include <object_grabber_gamma/object_grabberAction.h>
-#include <navigator/navigatorAction.h>
+#include <navigator_gamma/navigatorAction.h>
 #include <Eigen/Eigen>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -54,14 +54,14 @@ void objectGrabberDoneCb(const actionlib::SimpleClientGoalState& state,
 
 
 void navigatorDoneCb(const actionlib::SimpleClientGoalState& state,
-        const navigator::navigatorResultConstPtr& result) {
+        const navigator_gamma::navigatorResultConstPtr& result) {
     ROS_INFO(" navigatorDoneCb: server responded with state [%s]", state.toString().c_str());
     g_navigator_rtn_code=result->return_code;
     ROS_INFO("got object code response = %d; ",g_navigator_rtn_code);
-    if (g_navigator_rtn_code==navigator::navigatorResult::DESTINATION_CODE_UNRECOGNIZED) {
+    if (g_navigator_rtn_code==navigator_gamma::navigatorResult::DESTINATION_CODE_UNRECOGNIZED) {
         ROS_WARN("destination code not recognized");
     }
-    else if (g_navigator_rtn_code==navigator::navigatorResult::DESIRED_POSE_ACHIEVED) {
+    else if (g_navigator_rtn_code==navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED) {
         ROS_INFO("reached desired location!");
     }
     else {
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
     
     actionlib::SimpleActionClient<object_finder_gamma::objectFinderAction> object_finder_ac("objectFinderActionServer", true);
     actionlib::SimpleActionClient<object_grabber_gamma::object_grabberAction> object_grabber_ac("objectGrabberActionServer", true);
-    actionlib::SimpleActionClient<navigator::navigatorAction> navigator_ac("navigatorActionServer", true);
+    actionlib::SimpleActionClient<navigator_gamma::navigatorAction> navigator_ac("navigatorActionServer", true);
 
     // attempt to connect to the server:
     ROS_INFO("waiting for server: ");
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
     //specifications for what we are seeking:
     object_finder_gamma::objectFinderGoal object_finder_goal;   
     object_grabber_gamma::object_grabberGoal object_grabber_goal;
-    navigator::navigatorGoal navigation_goal;
+    navigator_gamma::navigatorGoal navigation_goal;
     
     bool finished_before_timeout;
     
@@ -142,7 +142,7 @@ int main(int argc, char** argv) {
     //  IF HERE, START THE FETCH BEHAVIOR!!
     
     ROS_INFO("sending navigation goal: TABLE");
-    navigation_goal.location_code=navigator::navigatorGoal::TABLE; //send robot to TABLE
+    navigation_goal.location_code=navigator_gamma::navigatorGoal::TABLE; //send robot to TABLE
         navigator_ac.sendGoal(navigation_goal,&navigatorDoneCb); // we could also name additional callback functions here, if desired
         finished_before_timeout = navigator_ac.waitForResult(ros::Duration(30.0));
         //bool finished_before_timeout = action_client.waitForResult(); // wait forever...
@@ -151,7 +151,7 @@ int main(int argc, char** argv) {
             return 1;
         }
       //SHOULD do error checking here before proceeding...
-        if (g_navigator_rtn_code!= navigator::navigatorResult::DESIRED_POSE_ACHIEVED) {
+        if (g_navigator_rtn_code!= navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED) {
             ROS_WARN("COULD NOT REACH TABLE; QUITTING");
             return 1;
         }
@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
         
         //if here, belief is that we are holding the Coke; return home            
     ROS_INFO("sending navigation goal: HOME");
-    navigation_goal.location_code=navigator::navigatorGoal::HOME; //send robot to TABLE
+    navigation_goal.location_code=navigator_gamma::navigatorGoal::HOME; //send robot to TABLE
         navigator_ac.sendGoal(navigation_goal,&navigatorDoneCb); // we could also name additional callback functions here, if desired
         finished_before_timeout = navigator_ac.waitForResult(ros::Duration(30.0));
         //bool finished_before_timeout = action_client.waitForResult(); // wait forever...
@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
             return 1;
         }
       //SHOULD do error checking here before proceeding...
-        if (g_navigator_rtn_code!= navigator::navigatorResult::DESIRED_POSE_ACHIEVED) {
+        if (g_navigator_rtn_code!= navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED) {
             ROS_WARN("COULD NOT REACH TABLE; QUITTING");
             return 1;
         }
