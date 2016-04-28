@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
 
 	segmentor.segment (*inliers, *coefficients);
 
-	pcl::PointCloud<pcl::PointXYZ>::Ptr table_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>);
+	/*pcl::PointCloud<pcl::PointXYZ>::Ptr table_cloud_ptr(new pcl::PointCloud<pcl::PointXYZ>);
 	table_cloud_ptr->header = sliced_cloud_ptr->header;
     table_cloud_ptr->is_dense = sliced_cloud_ptr->is_dense;
     table_cloud_ptr->width = inliers->indices.size();
@@ -165,12 +165,19 @@ int main(int argc, char** argv) {
     table_cloud_ptr->points.resize(inliers->indices.size());
 	for(int i = 0; i < inliers->indices.size(); i++){//There HAS to be a better way to do this...
 		table_cloud_ptr->points[i].getVector3fMap() = sliced_cloud_ptr->points[inliers->indices[i]].getVector3fMap();
-	}
+	}*/
 
+	//Figure out the table's height...
+	float z_avg = 0.0;
+	for(int i = 0; i < inliers->indices.size(); i++){
+		z_avg += sliced_cloud_ptr->points[inliers->indices[i]].z;
+	}
+	z_avg = z_avg / inliers->indices.size();
+	ROS_INFO("Table is about %f", z_avg);
 
     //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
     pcl::toROSMsg(*downsampled_kinect_ptr, input_cloud);
-    pcl::toROSMsg(*table_cloud_ptr, output_cloud); //convert to ros message for publication and display
+    pcl::toROSMsg(*sliced_cloud_ptr, output_cloud); //convert to ros message for publication and display
 
     input_cloud.header.frame_id = "kinect_pc_frame";
     output_cloud.header.frame_id = "world";
