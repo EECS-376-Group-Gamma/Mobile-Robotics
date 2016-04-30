@@ -8,7 +8,6 @@
 
 class Navigator {
 private:
-
     ros::NodeHandle nh_;  // we'll need a node handle; get one upon instantiation
     actionlib::SimpleActionServer<navigator_gamma::navigatorAction> navigator_as_;
     
@@ -59,57 +58,60 @@ void Navigator::executeCB(const actionlib::SimpleActionServer<navigator_gamma::n
     geometry_msgs::PoseStamped destination_pose;
     int navigation_status;
 
-    if (destination_id==navigator_gamma::navigatorGoal::COORDS) {
-        destination_pose=goal->desired_pose;
+    if (destination_id == navigator_gamma::navigatorGoal::COORDS) {
+        destination_pose = goal->desired_pose;
     }
     
     switch(destination_id) {
         case navigator_gamma::navigatorGoal::HOME: 
-              //specialized function to navigate to pre-defined HOME coords
-               navigation_status = navigate_home(); 
-               if (navigation_status==navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED) {
-                   ROS_INFO("reached home");
-                   result_.return_code = navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
-                   navigator_as_.setSucceeded(result_);
-               }
-               else {
-                   ROS_WARN("could not navigate home!");
-                   navigator_as_.setAborted(result_);
-               }
-               break;
-        case navigator_gamma::navigatorGoal::TABLE: 
-              //specialized function to navigate to pre-defined TABLE coords
-               navigation_status = navigate_to_table(); 
-               if (navigation_status==navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED) {
-                   ROS_INFO("reached table");
-                   result_.return_code = navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
-                   navigator_as_.setSucceeded(result_);
-               }
-               else {
-                   ROS_WARN("could not navigate to table!");
-                   navigator_as_.setAborted(result_);
-               }
-               break;
-        case navigator_gamma::navigatorGoal::COORDS: 
-              //more general function to navigate to specified pose:
-              destination_pose=goal->desired_pose;
-               navigation_status = navigate_to_pose(destination_pose); 
-               if (navigation_status==navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED) {
-                   ROS_INFO("reached desired pose");
-                   result_.return_code = navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
-                   navigator_as_.setSucceeded(result_);
-               }
-               else {
-                   ROS_WARN("could not navigate to desired pose!");
-                   navigator_as_.setAborted(result_);
-               }
-               break;               
-               
-        default:
-             ROS_WARN("this location ID is not implemented");
-             result_.return_code = navigator_gamma::navigatorResult::DESTINATION_CODE_UNRECOGNIZED; 
-             navigator_as_.setAborted(result_);
+            //specialized function to navigate to pre-defined HOME coords
+            navigation_status = navigate_home(); 
+            if (navigation_status == navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED) {
+                ROS_INFO("reached home");
+                result_.return_code = navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
+                navigator_as_.setSucceeded(result_);
+            } else {
+                ROS_WARN("could not navigate home!");
+                result_.return_code = navigator_gamma::navigatorResult::FAILED_CANNOT_REACH_DES_POSE;
+                navigator_as_.setAborted(result_);
             }
+            break;
+
+        case navigator_gamma::navigatorGoal::TABLE: 
+            //specialized function to navigate to pre-defined TABLE coords
+            navigation_status = navigate_to_table(); 
+            if (navigation_status == navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED) {
+                ROS_INFO("reached table");
+                result_.return_code = navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
+                navigator_as_.setSucceeded(result_);
+            } else {
+                ROS_WARN("could not navigate to table!");
+                result_.return_code = navigator_gamma::navigatorResult::FAILED_CANNOT_REACH_DES_POSE;
+                navigator_as_.setAborted(result_);
+            }
+            break;
+
+        case navigator_gamma::navigatorGoal::COORDS: 
+            //more general function to navigate to specified pose:
+            destination_pose = goal->desired_pose;
+            navigation_status = navigate_to_pose(destination_pose); 
+            if (navigation_status == navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED) {
+                ROS_INFO("reached desired pose");
+                result_.return_code = navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
+                navigator_as_.setSucceeded(result_);
+            } else {
+                ROS_WARN("could not navigate to desired pose!");
+                result_.return_code = navigator_gamma::navigatorResult::FAILED_CANNOT_REACH_DES_POSE;
+                navigator_as_.setAborted(result_);
+            }
+            break;               
+
+        default:
+            ROS_WARN("this location ID is not implemented");
+            result_.return_code = navigator_gamma::navigatorResult::DESTINATION_CODE_UNRECOGNIZED; 
+            navigator_as_.setAborted(result_);
+            break;
+    }
   
 }
 
