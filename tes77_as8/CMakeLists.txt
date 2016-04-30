@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(tes77_as8)
+
+find_package(catkin_simple REQUIRED)
+# example boost usage
+find_package(Boost REQUIRED COMPONENTS system thread)
+catkin_simple()
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+# Executables
+cs_add_executable(total_steer src/total_steer.cpp)
+#cs_add_executable(test_action_client src/test_action_client.cpp)
+cs_install()
+cs_export()
+    
