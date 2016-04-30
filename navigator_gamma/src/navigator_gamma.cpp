@@ -4,12 +4,14 @@
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
 #include <navigator_gamma/navigatorAction.h>
-
+#include <mobot_pub_des_state_gamma/path.h>  //DELETE IF NOT USING OPEN LOOP
+#include <geometry_msgs/PoseStamped.h> //DELETE IF NOT USING OPEN LOOP
 
 class Navigator {
 private:
     ros::NodeHandle nh_;  // we'll need a node handle; get one upon instantiation
     actionlib::SimpleActionServer<navigator_gamma::navigatorAction> navigator_as_;
+    ros::ServiceClient open_loop_client;
     
     // here are some message types to communicate with our client(s)
     navigator_gamma::navigatorGoal goal_; // goal message, received from client
@@ -17,6 +19,7 @@ private:
     navigator_gamma::navigatorFeedback feedback_; // not used in this example; 
     // would need to use: as_.publishFeedback(feedback_); to send incremental feedback to the client
 
+    geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi);
     int navigate_home();
     int navigate_to_table();
     int navigate_to_pose(geometry_msgs::PoseStamped goal_pose);
@@ -36,14 +39,55 @@ Navigator::Navigator() :
    navigator_as_(nh_, "navigatorActionServer", boost::bind(&Navigator::executeCB, this, _1),false) {
     ROS_INFO("in constructor of navigator...");
     // do any other desired initializations here...specific to your implementation
+    open_loop_client = nh_.serviceClient<mobot_pub_des_state_gamma::path>("append_path_queue_service");
 
     navigator_as_.start(); //start the server running
 }
 
-//specialized function: DUMMY...JUST RETURN SUCCESS...fix this
-//this SHOULD do the hard work of navigating to HOME
-int Navigator::navigate_home() { 
-    return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED; //just say we were successful
+geometry_msgs::Quaternion Navigator::convertPlanarPhi2Quaternion(double phi) {
+    geometry_msgs::Quaternion quaternion;
+    quaternion.x = 0.0;
+    quaternion.y = 0.0;
+    quaternion.z = sin(phi / 2.0);
+    quaternion.w = cos(phi / 2.0);
+    return quaternion;
+}
+
+
+int Navigator::navigate_home() {
+    /* OPEN LOOP APPROACH */
+    mobot_pub_des_state_gamma::path path_srv;
+    geometry_msgs::Quaternion quat;
+    geometry_msgs::PoseStamped pose_stamped;
+    pose_stamped.header.frame_id = "world";
+    geometry_msgs::Pose pose;
+    pose.position.x = 5.0;
+    pose.position.y = 0.0;
+    pose.position.z = 0.0;
+
+    quat = convertPlanarPhi2Quaternion(0.0);
+    pose.orientation = quat;
+    pose_stamped.pose = pose;
+    path_srv.request.path.poses.push_back(pose_stamped);
+
+    pose.position.y = -12.7;
+    pose_stamped.pose = pose;
+    path_srv.request.path.poses.push_back(pose_stamped);
+
+    pose.position.x = 2.0;
+    pose_stamped.pose = pose;
+    path_srv.request.path.poses.push_back(pose_stamped);
+
+    bool success = open_loop_client.call(path_srv);
+
+    if(success) {
+        return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
+    } else {
+        return navigator_gamma::navigatorResult::FAILED_CANNOT_REACH_DES_POSE;
+    }
+    /* OPEN LOOP APPROACH */
+
+    //return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED; //just say we were successful
 } 
 int Navigator::navigate_to_table() { 
     return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED; //just say we were successful
@@ -91,7 +135,7 @@ void Navigator::executeCB(const actionlib::SimpleActionServer<navigator_gamma::n
             }
             break;
 
-        case navigator_gamma::navigatorGoal::COORDS: 
+        case navigator_gamma::navigatorGoal::COORDS:
             //more general function to navigate to specified pose:
             destination_pose = goal->desired_pose;
             navigation_status = navigate_to_pose(destination_pose); 
@@ -116,7 +160,13 @@ void Navigator::executeCB(const actionlib::SimpleActionServer<navigator_gamma::n
 }
 
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "navigation_action_server"); // name this node 
+    ros::init(argc, argv, "navigation_action_server"); // name this node
+
+    // while (!open_loop_client.exists()) {
+    //     ROS_INFO("waiting for service...");
+    //     ros::Duration(1.0).sleep();
+    // }
+    // ROS_INFO("connected to open loop service");
 
     ROS_INFO("instantiating the navigation action server: ");
 

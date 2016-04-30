@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
     while(ros::ok()) {
     	if (!g_get_coke_trigger) {
         	ros::Duration(0.5).sleep();
-        	ros::spinOnce();    
+        	ros::spinOnce();
     	} else {
         	g_get_coke_trigger=false; // reset the trigger
 
