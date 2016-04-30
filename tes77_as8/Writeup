@@ -1,0 +1,10 @@
+Solution for Individual Problem Set 8 by Tom Shkurti.
+
+To run:
+	roslaunch gazebo_ros empty_world.launch
+	roslaunch tes77_as8 mobot_with_obsticles.launch
+	rosrun tes77_as8 total_steer
+
+	Uses the same name-writing steering (and the same steering algorithm) as the previous assignment, but now pulls data off of the /odom topic provided by the pre-made amcl/amcl localization node. AMCl uses the pre-made starting pen map (a copy of which has been moved into this package for convenience/portability). I was going to make my own map with a traffic cone sitting in the middle of the starting pen, but for time reasons opted not to bother with doing that.
+
+	Modified the steering to die easily on ^c, but didn't really have time to bother sending a "stop" signal to the robot when that happens. You'll probably just end up closing the entire simulator anyway.
