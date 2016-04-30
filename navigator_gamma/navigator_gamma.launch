@@ -1,0 +1,9 @@
+<launch>
+	<include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+	<include file="$(find mobot_urdf)/launch/mobot_w_lidar.launch"/>
+	<node pkg="mobot_pub_des_state_gamma" type="open_loop_controller_gamma" name="open_loop_controller_gamma"/>
+	<node pkg="mobot_pub_des_state_gamma" type="estop_alert" name="estop_alert"/>
+	<node pkg="mobot_pub_des_state_gamma" type="pub_des_state_main_gamma" name="pub_des_state_main_gamma"/>
+	<node pkg="navigator_gamma" type="example_navigator_action_client_gamma" name="example_navigator_action_client_gamma"/>
+	<node pkg="navigator_gamma" type="navigator_gamma" name="navigator_gamma"/>
+</launch>
