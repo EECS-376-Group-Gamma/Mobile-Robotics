@@ -6,12 +6,14 @@
 #include <navigator_gamma/navigatorAction.h>
 #include <mobot_pub_des_state_gamma/path.h>  //DELETE IF NOT USING OPEN LOOP
 #include <geometry_msgs/PoseStamped.h> //DELETE IF NOT USING OPEN LOOP
+#include <geometry_msgs/Twist.h>
 
 class Navigator {
 private:
     ros::NodeHandle nh_;  // we'll need a node handle; get one upon instantiation
     actionlib::SimpleActionServer<navigator_gamma::navigatorAction> navigator_as_;
     ros::ServiceClient open_loop_client;
+    ros::Publisher twist_commander;
     
     // here are some message types to communicate with our client(s)
     navigator_gamma::navigatorGoal goal_; // goal message, received from client
@@ -40,6 +42,7 @@ Navigator::Navigator() :
     ROS_INFO("in constructor of navigator...");
     // do any other desired initializations here...specific to your implementation
     open_loop_client = nh_.serviceClient<mobot_pub_des_state_gamma::path>("append_path_queue_service");
+    twist_commander = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 
     navigator_as_.start(); //start the server running
 }
@@ -56,12 +59,35 @@ geometry_msgs::Quaternion Navigator::convertPlanarPhi2Quaternion(double phi) {
 
 int Navigator::navigate_home() {
     /* OPEN LOOP APPROACH */
+
+    
+    // MOVE BACKWARDS FOR 2 SECONDS
+    ROS_INFO("MOVING BACKWARDS");
+    geometry_msgs::Twist twist_cmd;
+    twist_cmd.linear.x = -0.5;
+    twist_cmd.linear.y = 0.0;
+    twist_cmd.linear.z = 0.0;
+    twist_cmd.angular.x = 0.0;
+    twist_cmd.angular.y = 0.0;
+    twist_cmd.angular.z = 0.0;
+    double timer = 0.0;
+    ros::Rate loop_timer(1/0.01);
+
+    for(double i = 0.0; i < 2.0; i += 0.01){
+    //for(int i = 0; i < 2; i++){
+        twist_commander.publish(twist_cmd);
+        loop_timer.sleep();
+    }
+    ROS_INFO("FINISHED MOVING BACKWARDS");
+    
+
+    // RETURN TO HOME
     mobot_pub_des_state_gamma::path path_srv;
     geometry_msgs::Quaternion quat;
     geometry_msgs::PoseStamped pose_stamped;
     pose_stamped.header.frame_id = "world";
     geometry_msgs::Pose pose;
-    pose.position.x = 5.0;
+    pose.position.x = 0.0;
     pose.position.y = 0.0;
     pose.position.z = 0.0;
 
@@ -70,15 +96,8 @@ int Navigator::navigate_home() {
     pose_stamped.pose = pose;
     path_srv.request.path.poses.push_back(pose_stamped);
 
-    pose.position.y = -12.7;
-    pose_stamped.pose = pose;
-    path_srv.request.path.poses.push_back(pose_stamped);
-
-    pose.position.x = 2.0;
-    pose_stamped.pose = pose;
-    path_srv.request.path.poses.push_back(pose_stamped);
-
     bool success = open_loop_client.call(path_srv);
+    ROS_INFO("SENDING HOME POSE TO SERVER");
 
     if(success) {
         return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
@@ -86,12 +105,37 @@ int Navigator::navigate_home() {
         return navigator_gamma::navigatorResult::FAILED_CANNOT_REACH_DES_POSE;
     }
     /* OPEN LOOP APPROACH */
-
-    //return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED; //just say we were successful
-} 
-int Navigator::navigate_to_table() { 
-    return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED; //just say we were successful
 }
+
+int Navigator::navigate_to_table() { 
+    /* OPEN LOOP APPROACH */
+    mobot_pub_des_state_gamma::path path_srv;
+    geometry_msgs::Quaternion quat;
+    geometry_msgs::PoseStamped pose_stamped;
+    pose_stamped.header.frame_id = "world";
+    geometry_msgs::Pose pose;
+    pose.position.x = 5.0;  // move three meters forward
+    pose.position.y = 0.0;
+    pose.position.z = 0.0;
+
+    quat = convertPlanarPhi2Quaternion(0.0);
+    pose.orientation = quat;
+    pose_stamped.pose = pose;
+    path_srv.request.path.poses.push_back(pose_stamped);
+
+    ROS_INFO("SENDING TABLE POSE TO SERVER");
+    bool success = open_loop_client.call(path_srv);
+
+    ros::Duration(30.0).sleep();
+
+    if(success) {
+        return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
+    } else {
+        return navigator_gamma::navigatorResult::FAILED_CANNOT_REACH_DES_POSE;
+    }
+    /* OPEN LOOP APPROACH */
+}
+
 int Navigator::navigate_to_pose(geometry_msgs::PoseStamped goal_pose) {
     return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
 }
@@ -109,7 +153,7 @@ void Navigator::executeCB(const actionlib::SimpleActionServer<navigator_gamma::n
     switch(destination_id) {
         case navigator_gamma::navigatorGoal::HOME: 
             //specialized function to navigate to pre-defined HOME coords
-            navigation_status = navigate_home(); 
+            navigation_status = navigate_home();
             if (navigation_status == navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED) {
                 ROS_INFO("reached home");
                 result_.return_code = navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;

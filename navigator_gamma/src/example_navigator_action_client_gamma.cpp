@@ -46,13 +46,23 @@ int main(int argc, char** argv) {
      
     navigator_gamma::navigatorGoal navigation_goal;
     
+    // MOVE TO TABLE
+    navigation_goal.location_code = navigator_gamma::navigatorGoal::TABLE;
+    ROS_INFO("sending goal to go to table: ");
+    navigator_ac.sendGoal(navigation_goal,&navigatorDoneCb);
+    
+    //bool finished_before_timeout = navigator_ac.waitForResult(ros::Duration(30.0));
+    bool finished_before_timeout = navigator_ac.waitForResult(); // wait forever...
+    if (!finished_before_timeout) {
+        ROS_WARN("giving up waiting on result ");
+        return 1;
+    }
+
+    // MOVE TO HOME
     navigation_goal.location_code = navigator_gamma::navigatorGoal::HOME;
-    
-    ROS_INFO("sending goal: ");
-    navigator_ac.sendGoal(navigation_goal,&navigatorDoneCb); // we could also name additional callback functions here, if desired
-    
-    bool finished_before_timeout = navigator_ac.waitForResult(ros::Duration(30.0));
-    //bool finished_before_timeout = action_client.waitForResult(); // wait forever...
+    ROS_INFO("sending goal to return home: ");
+    navigator_ac.sendGoal(navigation_goal,&navigatorDoneCb);
+    finished_before_timeout = navigator_ac.waitForResult();
     if (!finished_before_timeout) {
         ROS_WARN("giving up waiting on result ");
         return 1;
