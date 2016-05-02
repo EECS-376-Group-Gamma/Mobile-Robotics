@@ -9,6 +9,9 @@
   <node pkg="baxter_trajectory_streamer" type="pre_pose" name="pre_pose"/>
   <node pkg="object_grabber_gamma" type="object_grabber_as_gamma" name="object_grabber_as_gamma"  output="screen"/> 
   <node pkg="object_finder_gamma" type="object_finder_as_gamma" name="object_finder_as_gamma"  output="screen"/> 
+  <node pkg="mobot_pub_des_state_gamma" type="open_loop_controller_gamma" name="open_loop_controller_gamma"/>
+  <node pkg="mobot_pub_des_state_gamma" type="estop_alert" name="estop_alert"/>
+  <node pkg="mobot_pub_des_state_gamma" type="pub_des_state_main_gamma" name="pub_des_state_main_gamma"/>
   <node pkg="navigator_gamma" type="navigator_gamma" name="navigator_gamma"  output="screen"/> 
   <node pkg="coordinator_gamma" type="coordinator_gamma" name="coordinator_gamma"  output="screen"/>
 </launch>
