@@ -275,8 +275,8 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
     ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
 
     object_pose.header.frame_id = "base_link";
-    object_pose.pose.position.x = 0.8;//centroid[0];
-    object_pose.pose.position.y = -0.25;//centroid[1];
+    object_pose.pose.position.x = centroid[0]; //0.8;  //NEW
+    object_pose.pose.position.y = centroid[1];//-0.25; //NEW
     object_pose.pose.position.z = -0.053; //centroid[2] + 0.15;
     object_pose.pose.orientation.x = -0.699; //0.166; //0;
     object_pose.pose.orientation.y = 0.266;//0.648; //0;
