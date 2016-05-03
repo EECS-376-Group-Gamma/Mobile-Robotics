@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
 		    }
 
 
-/*
+
 		    // if here, then presumably have a valid pose for object of interest
 		    // use object_grabber to pick up the coke can
 		    object_grabber_goal.object_code = object_grabber_gamma::object_grabberGoal::COKE_CAN; //specify the object to be grabbed 
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
 		        ROS_WARN("failed to grab object; giving up!");
 		        return 1;
 		    }
-*/
+
 
 
 		    // if here, belief is that we are holding the Coke

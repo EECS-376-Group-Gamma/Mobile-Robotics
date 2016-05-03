@@ -113,7 +113,7 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
     ROS_INFO("Waiting for transform...");
     while(ros::ok()){
         try{
-            lambda.lookupTransform("base_link", "camera_link", ros::Time(0), tau);
+            lambda.lookupTransform("torso", "camera_depth_optical_frame", ros::Time(0), tau);
             break;
         }
         catch (tf::TransformException ex){
@@ -204,17 +204,19 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
     pass.setFilterLimits(z_avg, MAX_HEIGHT); //here is the range: z value near zero, -0.02<z<0.02
     pass.filter(*sliced_cloud_ptr); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
 
+    ROS_INFO("Cut off everything below table...");
+
     //Get the normals
-    pcl::search::KdTree<PointXYZRGB>::Ptr tree (new pcl::search::KdTree<PointXYZRGB> ());
+    /*pcl::search::KdTree<PointXYZRGB>::Ptr tree (new pcl::search::KdTree<PointXYZRGB> ());
     pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
     pcl::NormalEstimation<PointXYZRGB, pcl::Normal> ne;
     ne.setSearchMethod (tree);
     ne.setInputCloud (sliced_cloud_ptr);
     ne.setKSearch (50);
     ne.compute(*cloud_normals);
-    ROS_INFO("Got normals");
+    ROS_INFO("Got normals");*/
 
-    //Find a cylindrical thing matching that description:
+    /*//Find a cylindrical thing matching that description:
     pcl::SACSegmentationFromNormals<PointXYZRGB, pcl::Normal> nseg;
     nseg.setOptimizeCoefficients (true);
     nseg.setModelType (pcl::SACMODEL_CYLINDER);
@@ -234,7 +236,26 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
 
     extract.setIndices(inliers);
     extract.setNegative(false);
-    extract.filter(*sliced_cloud_ptr);
+    extract.filter(*sliced_cloud_ptr);*/
+
+    //Can will be ABOVE the table...
+    pass.setInputCloud(sliced_cloud_ptr); //set the cloud we want to operate on--pass via a pointer
+    pass.setFilterLimits(0.5, 2.0); //here is the range: z value near zero, -0.02<z<0.02
+    pass.setFilterFieldName("x"); // we will "filter" based on points that lie within some range of z-value
+    pass.filter(*sliced_cloud_ptr); //  this will return the indices of the points in transformed_cloud_ptr that pass our test
+
+    ROS_INFO("SLICED OUT THE ROBOT ITSELF...");
+
+    segmentor.setModelType(pcl::SACMODEL_PLANE);
+    segmentor.setMethodType(pcl::SAC_RANSAC);
+    segmentor.setAxis(Eigen::Vector3f(0.0, 0.0, -1.0));
+    segmentor.setEpsAngle(30 * (M_PI / 180));
+    segmentor.setDistanceThreshold (0.01);
+
+
+    segmentor.setInputCloud(sliced_cloud_ptr);
+
+    segmentor.segment (*inliers, *coefficients);
 
     //And find the centroid
     Eigen::Vector4f centroid;
@@ -246,22 +267,21 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
     pcl::toROSMsg(*transformed_cloud_ptr, input_cloud);
     pcl::toROSMsg(*sliced_cloud_ptr, output_cloud); //convert to ros message for publication and display
 
-    input_cloud.header.frame_id = "/camera_link";
-    output_cloud.header.frame_id = "base_link";
-    while(ros::ok()){
+    input_cloud.header.frame_id = "torso";
+    output_cloud.header.frame_id = "torso";
+
     cloudIn.publish(input_cloud); // will not need to keep republishing if display setting is persistent
     cloudOut.publish(output_cloud); //can directly publish a pcl::PointCloud2!!
     ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
-}
 
     object_pose.header.frame_id = "base_link";
-    object_pose.pose.position.x = centroid[0];
-    object_pose.pose.position.y = centroid[1];
-    object_pose.pose.position.z = centroid[2];
-    object_pose.pose.orientation.x = 0;
-    object_pose.pose.orientation.y = 0;
-    object_pose.pose.orientation.z = 0;
-    object_pose.pose.orientation.w = 1;   
+    object_pose.pose.position.x = 0.8;//centroid[0];
+    object_pose.pose.position.y = -0.25;//centroid[1];
+    object_pose.pose.position.z = -0.053; //centroid[2] + 0.15;
+    object_pose.pose.orientation.x = -0.699; //0.166; //0;
+    object_pose.pose.orientation.y = 0.266;//0.648; //0;
+    object_pose.pose.orientation.z = -0.033; //0.702; //0;
+    object_pose.pose.orientation.w = 0.663; //0.109; //1;
     return found_object;
     
 }

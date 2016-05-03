@@ -57,15 +57,24 @@ ObjectGrabber::ObjectGrabber(ros::NodeHandle* nodehandle): nh_(*nodehandle),
     gripper_theta_ = M_PI/3.0; //approach yaw angle--try this, reaching out and to the left
     gripper_b_des_ << cos(gripper_theta_), sin(gripper_theta_), 0;
     gripper_t_des_ = gripper_b_des_.cross(gripper_n_des_);
+
+    Eigen::Quaterniond quat;
+    quat.x() = -0.699; //0.166; //0;
+    quat.y() = 0.266;//0.648; //0;
+    quat.z() = -0.033; //0.702; //0;
+    quat.w() = 0.663;
+
+    Eigen::Matrix3d matrix(quat);
+
     R_gripper_vert_cyl_grasp_.col(0) = gripper_n_des_;
     R_gripper_vert_cyl_grasp_.col(1) = gripper_t_des_;
     R_gripper_vert_cyl_grasp_.col(2) = gripper_b_des_;
     a_gripper_start_.linear() = R_gripper_vert_cyl_grasp_;
     a_gripper_end_.linear() = R_gripper_vert_cyl_grasp_;   
     //define approach, grasp and depart poses: 
-    a_gripper_approach_.linear() = R_gripper_vert_cyl_grasp_;
-    a_gripper_depart_.linear() = R_gripper_vert_cyl_grasp_;
-    a_gripper_grasp_.linear() = R_gripper_vert_cyl_grasp_;
+    a_gripper_approach_.linear() = matrix;//R_gripper_vert_cyl_grasp_;
+    a_gripper_depart_.linear() = matrix;//R_gripper_vert_cyl_grasp_;
+    a_gripper_grasp_.linear() = matrix;//R_gripper_vert_cyl_grasp_;
     
     gripper_open.data= false;
     gripper_close.data=true;
@@ -89,14 +98,27 @@ void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obj
     rtn_val=g_arm_motion_commander_ptr->rt_arm_request_q_data();
     
     Eigen::Affine3d object_affine;
-    object_affine = 
-     g_arm_motion_commander_ptr->transformPoseToEigenAffine3d(object_pose.pose);
+    object_affine = g_arm_motion_commander_ptr->transformPoseToEigenAffine3d(object_pose.pose);
     Eigen::Vector3d object_origin;
     object_origin = object_affine.translation();
     grasp_origin_ = object_origin; //grasp origin is same as object origin...
-    grasp_origin_(2) = gripper_table_z_;//except elevate the gripper for table clearance
+    grasp_origin_(0) = 0.8;
+    grasp_origin_(1) = -0.25;
+    grasp_origin_(2) = -0.053; //gripper_table_z_;//except elevate the gripper for table clearance
     a_gripper_grasp_.translation() = grasp_origin_;
     
+/*
+    object_pose.header.frame_id = "base_link";
+    object_pose.pose.position.x = 0.8;//centroid[0];
+    object_pose.pose.position.y = -0.25;//centroid[1];
+    object_pose.pose.position.z = -0.053; //centroid[2] + 0.15;
+    object_pose.pose.orientation.x = -0.699; //0.166; //0;
+    object_pose.pose.orientation.y = 0.266;//0.648; //0;
+    object_pose.pose.orientation.z = -0.033; //0.702; //0;
+    object_pose.pose.orientation.w = 0.663; //0.109; //1;
+*/
+
+
     //to slide sideways to approach, compute a pre-grasp approach pose;
     // corresponds to backing up along gripper-z axis by distance L_approach:
     approach_origin_ = grasp_origin_ - gripper_b_des_*L_approach_; 
@@ -115,14 +137,17 @@ void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obj
     des_gripper_approach_pose.pose = g_arm_motion_commander_ptr->transformEigenAffine3dToPose(a_gripper_approach_);
     planner_rtn_code = g_arm_motion_commander_ptr->rt_arm_plan_path_current_to_goal_pose(des_gripper_approach_pose);
     
+    
     //try to move here:
     g_arm_motion_commander_ptr->rt_arm_execute_planned_path();
+    ROS_WARN("PLAN 1!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     
     //slide to can:
     des_gripper_grasp_pose.header.frame_id = "torso";
     des_gripper_grasp_pose.pose = g_arm_motion_commander_ptr->transformEigenAffine3dToPose(a_gripper_grasp_);
     planner_rtn_code = g_arm_motion_commander_ptr->rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
     g_arm_motion_commander_ptr->rt_arm_execute_planned_path();
+    ROS_WARN("PLAN 2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11");
     
     //close the gripper:
     gripper_publisher.publish(gripper_close);
@@ -134,6 +159,7 @@ void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obj
     des_gripper_depart_pose.pose = g_arm_motion_commander_ptr->transformEigenAffine3dToPose(a_gripper_depart_);
     planner_rtn_code = g_arm_motion_commander_ptr->rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
     g_arm_motion_commander_ptr->rt_arm_execute_planned_path();
+    ROS_WARN("PLAN 3!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11");
 } 
 
 
