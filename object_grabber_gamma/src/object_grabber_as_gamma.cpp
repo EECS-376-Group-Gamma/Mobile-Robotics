@@ -11,7 +11,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <geometry_msgs/PoseStamped.h>
-#include <object_grabber/object_grabberAction.h>
+#include <object_grabber_gamma/object_grabberAction.h>
 #include <std_msgs/Bool.h>
 
 

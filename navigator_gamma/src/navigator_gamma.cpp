@@ -73,13 +73,13 @@ int Navigator::navigate_home() {
     double timer = 0.0;
     ros::Rate loop_timer(1/0.01);
 
-    for(double i = 0.0; i < 2.0; i += 0.01){
+    for(double i = 0.0; i < 1.0; i += 0.01){
     //for(int i = 0; i < 2; i++){
         twist_commander.publish(twist_cmd);
         loop_timer.sleep();
     }
     ROS_INFO("FINISHED MOVING BACKWARDS");
-    
+    /*
 
     // RETURN TO HOME
     mobot_pub_des_state_gamma::path path_srv;
@@ -104,6 +104,10 @@ int Navigator::navigate_home() {
     } else {
         return navigator_gamma::navigatorResult::FAILED_CANNOT_REACH_DES_POSE;
     }
+
+    */
+
+    return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;
     /* OPEN LOOP APPROACH */
 }
 
@@ -114,7 +118,7 @@ int Navigator::navigate_to_table() {
     geometry_msgs::PoseStamped pose_stamped;
     pose_stamped.header.frame_id = "world";
     geometry_msgs::Pose pose;
-    pose.position.x = 5.0;  // move three meters forward
+    pose.position.x = 1.0;
     pose.position.y = 0.0;
     pose.position.z = 0.0;
 
@@ -126,7 +130,7 @@ int Navigator::navigate_to_table() {
     ROS_INFO("SENDING TABLE POSE TO SERVER");
     bool success = open_loop_client.call(path_srv);
 
-    ros::Duration(30.0).sleep();
+    ros::Duration(15.0).sleep();
 
     if(success) {
         return navigator_gamma::navigatorResult::DESIRED_POSE_ACHIEVED;

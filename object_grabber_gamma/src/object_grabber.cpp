@@ -5,9 +5,9 @@ private:
     ros::NodeHandle nh_;
 
     //messages to send/receive cartesian goals / results:
-    object_grabber::object_grabberGoal grab_goal_;
-    object_grabber::object_grabberResult grab_result_; 
-    object_grabber::object_grabberFeedback grab_fdbk_;    
+    object_grabber_gamma::object_grabberGoal grab_goal_;
+    object_grabber_gamma::object_grabberResult grab_result_; 
+    object_grabber_gamma::object_grabberFeedback grab_fdbk_;    
     geometry_msgs::PoseStamped object_pose_stamped_;
     int object_code_;
     std_msgs::Bool gripper_open,gripper_close;
@@ -25,9 +25,9 @@ private:
     
     ros::Publisher gripper_publisher;
     
-    actionlib::SimpleActionServer<object_grabber::object_grabberAction> object_grabber_as_;
+    actionlib::SimpleActionServer<object_grabber_gamma::object_grabberAction> object_grabber_as_;
     //action callback fnc
-    void executeCB(const actionlib::SimpleActionServer<object_grabber::object_grabberAction>::GoalConstPtr& goal);   
+    void executeCB(const actionlib::SimpleActionServer<object_grabber_gamma::object_grabberAction>::GoalConstPtr& goal);   
     void vertical_cylinder_power_grasp(geometry_msgs::PoseStamped object_pose);    
     
 public:
@@ -140,19 +140,19 @@ void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obj
 //callback: at present, hard-coded for Coke-can object;
 //extend this to add more grasp strategies for more objects
 // also, this code does NO error checking (e.g., unreachable); needs to be fixed!
-void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<object_grabber::object_grabberAction>::GoalConstPtr& goal) {
+void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<object_grabber_gamma::object_grabberAction>::GoalConstPtr& goal) {
  
    int object_code = goal->object_code;
    geometry_msgs::PoseStamped object_pose = goal->object_frame;
    switch(object_code) {
-   case object_grabber::object_grabberGoal::COKE_CAN: 
+   case object_grabber_gamma::object_grabberGoal::COKE_CAN: 
      vertical_cylinder_power_grasp(object_pose);
-     grab_result_.return_code = object_grabber::object_grabberResult::OBJECT_ACQUIRED; 
+     grab_result_.return_code = object_grabber_gamma::object_grabberResult::OBJECT_ACQUIRED; 
      object_grabber_as_.setSucceeded(grab_result_);
      break;
    default:
              ROS_WARN("this object ID is not implemented");
-             grab_result_.return_code = object_grabber::object_grabberResult::FAILED_OBJECT_UNKNOWN; 
+             grab_result_.return_code = object_grabber_gamma::object_grabberResult::FAILED_OBJECT_UNKNOWN; 
              object_grabber_as_.setAborted(grab_result_);
             }
      

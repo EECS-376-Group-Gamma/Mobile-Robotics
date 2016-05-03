@@ -45,6 +45,18 @@ int main(int argc, char** argv) {
             in RPY (radian) [1.563, -0.084, 2.750]
             in RPY (degree) [89.537, -4.810, 157.546]
         */
+/*
+    perceived_object_pose.header.frame_id = "torso";
+    perceived_object_pose.pose.position.x = 0;
+    perceived_object_pose.pose.position.y = 0.5;
+    perceived_object_pose.pose.position.z = 0;
+    perceived_object_pose.pose.orientation.x = 0;
+    perceived_object_pose.pose.orientation.y = 0;
+    perceived_object_pose.pose.orientation.z = 0;
+    perceived_object_pose.pose.orientation.w = 1;
+*/
+
+    
     perceived_object_pose.header.frame_id = "torso";
     perceived_object_pose.pose.position.x = 0.680;
     perceived_object_pose.pose.position.y = -0.205;
@@ -54,6 +66,7 @@ int main(int argc, char** argv) {
     perceived_object_pose.pose.orientation.z = 0.702;
     perceived_object_pose.pose.orientation.w = 0.109;
     
+
     //stuff a goal message:
     object_grabber_goal.object_code = object_grabber_gamma::object_grabberGoal::COKE_CAN; //specify the object to be grabbed
     object_grabber_goal.object_frame = perceived_object_pose;

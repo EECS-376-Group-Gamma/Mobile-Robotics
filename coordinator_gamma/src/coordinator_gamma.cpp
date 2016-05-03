@@ -73,7 +73,7 @@ void navigatorDoneCb(const actionlib::SimpleClientGoalState& state,
 void alexaCB(const std_msgs::UInt32& code_msg) {
     int alexa_code = code_msg.data;
     ROS_INFO("received Alexa code: %d", alexa_code);
-    if (alexa_code= ALEXA_GET_COKE_CODE) {
+    if (alexa_code == ALEXA_GET_COKE_CODE) {
       g_get_coke_trigger = true;
     }
 }
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
         ros::Duration(0.5).sleep();
         ROS_INFO("retrying...");
     }
-    ROS_INFO("connected to object_finder action server"); // if here, then we connected to the server;
+    ROS_INFO("connected to object_finder action server"); // if here, then we are connected to the server;
 
     //connect to the object_grabber server
     server_exists=false;
@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
         ros::Duration(0.5).sleep();
         ROS_INFO("retrying...");
     }
-    ROS_INFO("connected to object_grabber action server"); // if here, then we connected to the server; 
+    ROS_INFO("connected to object_grabber action server"); // if here, then we are connected to the server; 
     
     // attempt to connect to the navigator server:
     ROS_INFO("waiting for server: ");
@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
         ros::Duration(0.5).sleep();
         ROS_INFO("retrying...");
     }
-    ROS_INFO("connected to navigator action server"); // if here, then we connected to the server; 
+    ROS_INFO("connected to navigator action server"); // if here, then we are connected to the server; 
 
     //specifications for what we are seeking:
     object_finder_gamma::objectFinderGoal object_finder_goal;   
@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
 		    }
 
 
-
+/*
 		    // if here, then presumably have a valid pose for object of interest
 		    // use object_grabber to pick up the coke can
 		    object_grabber_goal.object_code = object_grabber_gamma::object_grabberGoal::COKE_CAN; //specify the object to be grabbed 
@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
 		        ROS_WARN("failed to grab object; giving up!");
 		        return 1;
 		    }
-
+*/
 
 
 		    // if here, belief is that we are holding the Coke

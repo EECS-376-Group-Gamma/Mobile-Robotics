@@ -98,7 +98,6 @@ void ObjectFinder::kinectCB(const sensor_msgs::PointCloud2ConstPtr& c) {//Well T
     }
 }
 
-//specialized function: DUMMY...JUST RETURN A HARD-CODED POSE; FIX THIS
 bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::PoseStamped &object_pose) {
 
     //Are all of these ACTUALLY needed?
@@ -114,7 +113,7 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
     ROS_INFO("Waiting for transform...");
     while(ros::ok()){
         try{
-            lambda.lookupTransform("world", "kinect_pc_frame", ros::Time(0), tau);
+            lambda.lookupTransform("base_link", "camera_link", ros::Time(0), tau);
             break;
         }
         catch (tf::TransformException ex){
@@ -126,12 +125,14 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
 
     //Grab a snapshot of the incoming point cloud.
     ready = false;
-    ros::Subscriber pcs = nh_.subscribe("/kinect/depth/points", 1, kinectCB);
+    ros::Subscriber pcs = nh_.subscribe("/camera/depth_registered/points", 1, kinectCB);
     ROS_INFO("Waiting for a message from the Kinect...");
     while(!ready && ros::ok()){
         ros::spinOnce();
     }
     ROS_INFO("GOT IT!");
+
+    bool found_object=true;
 
     //will publish  pointClouds as ROS-compatible messages; create publishers; note topics for rviz viewing
     ros::Publisher cloudIn = nh_.advertise<sensor_msgs::PointCloud2> ("/pcd_original", 1);
@@ -180,7 +181,7 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
     segmentor.segment (*inliers, *coefficients);
 
     if(inliers->indices.size() < 10){
-        return false;
+        found_object =  false;
     }
 
     //Figure out the table's height...
@@ -228,7 +229,7 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
     nseg.segment (*inliers, *coefficients);
 
     if(inliers->indices.size() < 5){
-        return false;
+        found_object = false;
     }
 
     extract.setIndices(inliers);
@@ -242,18 +243,18 @@ bool ObjectFinder::find_upright_coke_can(float surface_height,geometry_msgs::Pos
     ROS_WARN("CALCULATED CENTER OF CAN TO BE (%f, %f, %f)",centroid[0], centroid[1], centroid[2]);
 
     //the new cloud is a set of points from original cloud, coplanar with selected patch; display the result
-    pcl::toROSMsg(*downsampled_kinect_ptr, input_cloud);
+    pcl::toROSMsg(*transformed_cloud_ptr, input_cloud);
     pcl::toROSMsg(*sliced_cloud_ptr, output_cloud); //convert to ros message for publication and display
 
-    input_cloud.header.frame_id = "kinect_pc_frame";
-    output_cloud.header.frame_id = "world";
-
+    input_cloud.header.frame_id = "/camera_link";
+    output_cloud.header.frame_id = "base_link";
+    while(ros::ok()){
     cloudIn.publish(input_cloud); // will not need to keep republishing if display setting is persistent
     cloudOut.publish(output_cloud); //can directly publish a pcl::PointCloud2!!
     ros::spinOnce(); //PclUtilsGamma needs some spin cycles to invoke callbacks for new selected points
+}
 
-    bool found_object=true;
-    object_pose.header.frame_id = "torso";
+    object_pose.header.frame_id = "base_link";
     object_pose.pose.position.x = centroid[0];
     object_pose.pose.position.y = centroid[1];
     object_pose.pose.position.z = centroid[2];
@@ -298,6 +299,7 @@ void ObjectFinder::executeCB(const actionlib::SimpleActionServer<object_finder_g
                }
                break;
         default:
+            found_object = find_upright_coke_can(surface_height,object_pose); //special case for Coke can;
              ROS_WARN("this object ID is not implemented");
              result_.found_object_code = object_finder_gamma::objectFinderResult::OBJECT_CODE_NOT_RECOGNIZED; 
              object_finder_as_.setAborted(result_);

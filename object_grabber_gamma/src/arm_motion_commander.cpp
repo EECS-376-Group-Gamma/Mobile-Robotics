@@ -20,6 +20,7 @@ public:
         ArmMotionCommander(ros::NodeHandle* nodehandle); //define the body of the constructor outside of class definition
 
     ~ArmMotionCommander(void) {
+        
     }
     void send_test_goal(void);
     int plan_move_to_pre_pose(void);
